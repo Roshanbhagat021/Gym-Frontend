@@ -21,10 +21,10 @@ export default function UsersPage() {
   const { data: users = [], loading, execute } = useAsync(adminApi.users, []);
   return (
     <div>
-      <PageHeader title="Admin Users" eyebrow="Super admin" actions={<Button variant="accent" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-5 w-5" /> Add user</Button>}>
+      <PageHeader title="Admin Users" eyebrow="Super admin">
         This section is protected for `SUPER_ADMIN` exactly like the backend.
       </PageHeader>
-      <DataTable rows={users} loading={loading} emptyTitle="No admin users" columns={[
+      <DataTable toolbarActions={<Button variant="subtle" className="!min-h-10 border-ember text-ember" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4" /> Add user</Button>} rows={users} loading={loading} emptyTitle="No admin users" columns={[
         { key: 'name', header: 'Name', render: (row) => <div><p className="font-bold">{row.name}</p><p className="text-xs text-steel">{row.email}</p></div> },
         { key: 'role', header: 'Role' },
         { key: 'isActive', header: 'Active', render: (row) => row.isActive ? 'Yes' : 'No' },

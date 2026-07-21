@@ -20,10 +20,11 @@ export default function PlansPage() {
 
   return (
     <div>
-      <PageHeader title="Membership Plans" eyebrow="Plans" actions={<Button variant="accent" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-5 w-5" /> Add plan</Button>}>
+      <PageHeader title="Membership Plans" eyebrow="Plans">
         Plans are public by default through the backend active plan endpoint.
       </PageHeader>
       <DataTable
+        toolbarActions={<Button variant="subtle" className="!min-h-10 border-ember text-ember" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4" /> Add plan</Button>}
         rows={plans}
         loading={loading}
         emptyTitle="No plans yet"

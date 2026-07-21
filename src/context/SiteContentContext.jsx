@@ -36,6 +36,7 @@ export function SiteContentProvider({ children }) {
       loading,
       error,
       gymName: content?.gymName || DEFAULT_GYM_NAME,
+      logo: content?.logo || '',
     }),
     [content, loading, error],
   );

@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Dumbbell } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { Button } from '../../components/ui/Button';
 import { Field, Input } from '../../components/ui/Input';
+import { BrandMark } from '../../components/common/BrandMark';
 
 export default function LoginPage() {
   const { login, logout, user, isAuthenticated } = useAuth();
-  const { gymName } = useSiteContent();
+  const { gymName, logo } = useSiteContent();
   const [loginError, setLoginError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,9 +58,7 @@ export default function LoginPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/35 to-ember/40" />
           <div className="relative z-10 flex h-full flex-col justify-between">
             <div className="flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center rounded-lg bg-white text-ink">
-                <Dumbbell className="h-6 w-6" />
-              </span>
+              <BrandMark logo={logo} className="h-12 w-12" iconClassName="h-6 w-6" />
               <span className="text-2xl font-black">{gymName}</span>
             </div>
             <div>
@@ -76,7 +74,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 md:p-10">
           <div className="mb-8 md:hidden">
             <div className="flex items-center gap-3">
-              <Dumbbell className="h-7 w-7 text-ember" />
+              <BrandMark logo={logo} className="h-9 w-9" />
               <span className="text-xl font-black">{gymName}</span>
             </div>
           </div>

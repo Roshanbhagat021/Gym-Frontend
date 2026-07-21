@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import { Dumbbell, UserRound } from 'lucide-react';
+import { UserRound } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { Button } from '../../components/ui/Button';
 import { Field, Input } from '../../components/ui/Input';
+import { BrandMark } from '../../components/common/BrandMark';
 
 export default function MemberLoginPage() {
   const { login, logout, user, isAuthenticated } = useAuth();
-  const { gymName } = useSiteContent();
+  const { gymName, logo } = useSiteContent();
   const [loginError, setLoginError] = useState('');
   const navigate = useNavigate();
   const { register, handleSubmit, formState } = useForm({
@@ -48,9 +49,7 @@ export default function MemberLoginPage() {
         className="w-full max-w-md rounded-lg bg-white p-6 shadow-panel dark:bg-[#14161b] md:p-8"
       >
         <Link to="/" className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-lg bg-ink text-white dark:bg-white dark:text-ink">
-            <Dumbbell className="h-5 w-5" />
-          </span>
+          <BrandMark logo={logo} className="h-11 w-11" />
           <span className="text-xl font-black">{gymName}</span>
         </Link>
 

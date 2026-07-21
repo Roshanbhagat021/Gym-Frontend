@@ -20,10 +20,10 @@ export default function CouponsPage() {
   const { data: coupons = [], loading, execute } = useAsync(adminApi.coupons, []);
   return (
     <div>
-      <PageHeader title="Coupons" eyebrow="Offers" actions={<Button variant="accent" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-5 w-5" /> Add coupon</Button>}>
+      <PageHeader title="Coupons" eyebrow="Offers">
         Coupon validation is available through the protected backend validate route.
       </PageHeader>
-      <DataTable rows={coupons} loading={loading} emptyTitle="No coupons yet" columns={[
+      <DataTable toolbarActions={<Button variant="subtle" className="!min-h-10 border-ember text-ember" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4" /> Add coupon</Button>} rows={coupons} loading={loading} emptyTitle="No coupons yet" columns={[
         { key: 'code', header: 'Code', render: (row) => <span className="rounded-lg bg-slate-100 px-2 py-1 font-black dark:bg-white/10">{row.code}</span> },
         { key: 'type', header: 'Type' },
         { key: 'value', header: 'Value' },

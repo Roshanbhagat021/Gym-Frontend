@@ -19,10 +19,10 @@ export default function TrainersPage() {
   const { data: trainers = [], loading, execute } = useAsync(() => adminApi.trainers(false), []);
   return (
     <div>
-      <PageHeader title="Trainers" eyebrow="CMS" actions={<Button variant="accent" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-5 w-5" /> Add trainer</Button>}>
+      <PageHeader title="Trainers" eyebrow="CMS">
         Active trainers are shown on the public website.
       </PageHeader>
-      <DataTable rows={trainers} loading={loading} emptyTitle="No trainers yet" columns={[
+      <DataTable toolbarActions={<Button variant="subtle" className="!min-h-10 border-ember text-ember" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4" /> Add trainer</Button>} rows={trainers} loading={loading} emptyTitle="No trainers yet" columns={[
         { key: 'name', header: 'Trainer', render: (row) => <div className="flex items-center gap-3"><img src={row.image || 'https://images.unsplash.com/photo-1594381898411-846e7d193883?auto=format&fit=crop&w=200&q=80'} alt="" className="h-12 w-12 rounded-lg object-cover" /><div><p className="font-bold">{row.name}</p><p className="text-xs text-steel">{row.specialization}</p></div></div> },
         { key: 'experience', header: 'Experience', render: (row) => `${row.experience} yrs` },
         { key: 'isActive', header: 'Active', render: (row) => row.isActive ? 'Yes' : 'No' },
@@ -61,6 +61,8 @@ function TrainerForm({ open, trainer, onClose, onSaved }) {
           <ImageUploadField
             label="Trainer image"
             value={image}
+            enableCrop
+            helper="PNG, JPG, or JPEG up to 5MB. You can crop and reposition the image before upload."
             onChange={(url) => setValue('image', url, { shouldDirty: true })}
           />
         </div>

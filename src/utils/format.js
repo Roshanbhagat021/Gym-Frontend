@@ -1,5 +1,5 @@
 export function currency(value) {
-  return `₹${Number(value || 0).toLocaleString('en-IN')}`;
+  return `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 }
 
 export function shortDate(value) {

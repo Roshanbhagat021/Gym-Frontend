@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { CalendarDays, CreditCard, Dumbbell, LogOut, ShieldCheck, UserRound } from 'lucide-react';
+import { CalendarDays, CreditCard, LogOut, ShieldCheck, UserRound } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -10,10 +10,11 @@ import { useSiteContent } from '../../context/SiteContentContext';
 import { useAsync } from '../../hooks/useAsync';
 import { memberApi } from '../../services/api';
 import { currency, shortDate } from '../../utils/format';
+import { BrandMark } from '../../components/common/BrandMark';
 
 export default function MemberDashboardPage() {
   const { logout } = useAuth();
-  const { gymName } = useSiteContent();
+  const { gymName, logo } = useSiteContent();
   const navigate = useNavigate();
   const { data: profile, loading: profileLoading } = useAsync(memberApi.profile, []);
   const { data: payments = [], loading: paymentsLoading } = useAsync(memberApi.paymentHistory, []);
@@ -30,9 +31,7 @@ export default function MemberDashboardPage() {
       <header className="border-b border-slate-200 bg-white/85 px-4 py-4 backdrop-blur-xl dark:border-white/10 dark:bg-[#111317]/85 md:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-ink text-white dark:bg-white dark:text-ink">
-              <Dumbbell className="h-5 w-5" />
-            </span>
+            <BrandMark logo={logo} />
             <span className="font-black">{gymName}</span>
           </Link>
           <Button variant="ghost" onClick={handleLogout}>

@@ -9,7 +9,7 @@ export const publicApi = {
 };
 
 export const adminApi = {
-  stats: () => request(apiClient.get('/dashboard/stats')),
+  stats: (params) => request(apiClient.get('/dashboard/stats', { params: typeof params === 'string' ? { period: params } : params })),
   members: (params) => request(apiClient.get('/members/dashboard', { params })),
   membersBasic: () => request(apiClient.get('/members')),
   member: (id) => request(apiClient.get(`/members/${id}`)),
@@ -29,7 +29,7 @@ export const adminApi = {
   deletePlan: (id) =>
     request(apiClient.delete(`/membership-plans/${id}`), { successMessage: 'Plan removed' }),
 
-  payments: () => request(apiClient.get('/payments')),
+  payments: (params) => request(apiClient.get('/payments', { params })),
   createPayment: (payload) =>
     request(apiClient.post('/payments', payload), { successMessage: 'Payment recorded' }),
   updatePayment: (id, payload) =>

@@ -3,11 +3,9 @@ import { PageHeader } from '../../components/common/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../context/AuthContext';
-import { useSiteContent } from '../../context/SiteContentContext';
 
 export default function SettingsPage() {
   const { user, theme, setTheme } = useAuth();
-  const { gymName, loading } = useSiteContent();
   return (
     <div>
       <PageHeader title="Settings" eyebrow="Workspace">
@@ -29,12 +27,6 @@ export default function SettingsPage() {
             <Button variant={theme === 'light' ? 'accent' : 'subtle'} onClick={() => setTheme('light')}><Sun className="h-5 w-5" /> Light</Button>
             <Button variant={theme === 'dark' ? 'accent' : 'subtle'} onClick={() => setTheme('dark')}><Moon className="h-5 w-5" /> Dark</Button>
           </div>
-        </Card>
-        <Card className="lg:col-span-2">
-          <h2 className="text-xl font-black">Configuration</h2>
-          <p className="mt-2 text-sm text-steel">
-            Current gym name from the database CMS record: <strong>{loading ? 'Loading...' : gymName}</strong>.
-          </p>
         </Card>
       </div>
     </div>

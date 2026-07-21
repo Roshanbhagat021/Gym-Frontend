@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { CalendarDays, CreditCard, Edit3, Mail, MapPin, Phone, Plus, Search, Trash2, UserRound, X } from 'lucide-react';
+import { CalendarDays, CreditCard, Edit3, Mail, MapPin, Phone, Plus, RefreshCw, Search, Trash2, UserRound, X } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { DataTable } from '../../components/common/DataTable';
 import { FormModal } from '../../components/common/FormModal';
@@ -16,7 +16,7 @@ import { useAsync } from '../../hooks/useAsync';
 import { currency, getMemberEmail, getMemberName, shortDate } from '../../utils/format';
 
 export default function MembersPage() {
-  const [filters, setFilters] = useState({ search: '', status: '', page: 1, limit: 10 });
+  const [filters, setFilters] = useState({ search: '', status: '', gender: '', expiry: '', sortBy: 'createdAt', sortOrder: 'DESC', page: 1, limit: 10 });
   const [searchText, setSearchText] = useState('');
   const [editing, setEditing] = useState(null);
   const [renewing, setRenewing] = useState(null);
@@ -47,15 +47,14 @@ export default function MembersPage() {
   const meta = data?.meta || {};
 
   const columns = useMemo(() => [
-    { key: 'name', header: 'Member', render: (row) => <div><p className="font-bold">{getMemberName(row)}</p><p className="text-xs text-steel">{getMemberEmail(row)}</p></div> },
-    { key: 'mobile', header: 'Mobile' },
-    { key: 'membershipStatus', header: 'Status', render: (row) => <StatusBadge value={row.membershipStatus} /> },
+    { key: 'name', header: 'Member', sortValue: (row) => getMemberName(row), render: (row) => <div><p className="font-bold">{getMemberName(row)}</p><p className="text-xs text-steel">{getMemberEmail(row)}</p></div> },
+    { key: 'mobile', header: 'Mobile', sortable: false },
+    { key: 'membershipStatus', header: 'Status', sortable: false, render: (row) => <StatusBadge value={row.membershipStatus} /> },
     { key: 'createdAt', header: 'Joined', render: (row) => shortDate(row.createdAt) },
     { key: 'actions', header: 'Actions', render: (row) => (
       <div className="flex flex-wrap gap-2" onClick={(event) => event.stopPropagation()}>
-        <Button variant="accent" className="!min-h-8 h-8 px-3 text-xs" onClick={() => setRenewing(row)} aria-label="Renew membership">
-          <CreditCard className="h-3.5 w-3.5" />
-          Renew
+        <Button variant="accent" className="!min-h-8 h-8 w-8 px-0" onClick={() => setRenewing(row)} aria-label="Renew membership" title="Renew membership">
+          <RefreshCw className="h-3.5 w-3.5" />
         </Button>
         <Button variant="subtle" className="!min-h-8 h-8 w-8 px-0" onClick={() => { setEditing(row); setOpen(true); }} aria-label="Edit member"><Edit3 className="h-3.5 w-3.5" /></Button>
         <Button variant="dangerSubtle" className="!min-h-8 h-8 w-8 px-0" onClick={() => setDeleting(row)} aria-label="Delete member"><Trash2 className="h-3.5 w-3.5" /></Button>
@@ -68,11 +67,10 @@ export default function MembersPage() {
       <PageHeader
         title="Manage Members"
         eyebrow="People"
-        actions={<Button variant="accent" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-5 w-5" /> Add member</Button>}
       >
         Register members, update profiles, assign plans, search, filter, and page through backend results.
       </PageHeader>
-      <div className="mb-4 grid gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.04] md:grid-cols-[1fr_220px]">
+      <div className="hidden">
         <div className="relative">
           <Search className="absolute left-3 top-3.5 h-4 w-4 text-steel" />
           <Input placeholder="Search name, email, mobile" className="pl-10" value={searchText} onChange={(event) => setSearchText(event.target.value)} />
@@ -81,12 +79,51 @@ export default function MembersPage() {
           <option value="">All statuses</option>
           {MEMBERSHIP_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
         </Select>
+        <Select aria-label="Filter by gender" value={filters.gender} onChange={(event) => setFilters((current) => ({ ...current, gender: event.target.value, page: 1 }))}>
+          <option value="">All genders</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </Select>
+        <Select aria-label="Filter by membership expiry" value={filters.expiry} onChange={(event) => setFilters((current) => ({ ...current, expiry: event.target.value, page: 1 }))}>
+          <option value="">Any expiry date</option>
+          <option value="thisWeek">Expiring this week</option>
+          <option value="thisMonth">Expiring this month</option>
+        </Select>
+        <Select aria-label="Sort members" value={`${filters.sortBy}:${filters.sortOrder}`} onChange={(event) => { const [sortBy, sortOrder] = event.target.value.split(':'); setFilters((current) => ({ ...current, sortBy, sortOrder, page: 1 })); }}>
+          <option value="createdAt:DESC">Newest joined</option>
+          <option value="createdAt:ASC">Oldest joined</option>
+          <option value="user.name:ASC">Name A–Z</option>
+          <option value="user.name:DESC">Name Z–A</option>
+        </Select>
+        <Button type="button" variant="subtle" onClick={() => { setSearchText(''); setFilters({ search: '', status: '', gender: '', expiry: '', sortBy: 'createdAt', sortOrder: 'DESC', page: 1, limit: 10 }); }}>
+          <X className="h-4 w-4" /> Clear filters
+        </Button>
       </div>
       <DataTable
         rows={rows}
         columns={columns}
         loading={loading}
         emptyTitle="No members found"
+        searchValue={searchText}
+        onSearchChange={setSearchText}
+        searchPlaceholder="Search name, email, mobile"
+        toolbarActions={<Button variant="subtle" className="!min-h-10 border-ember text-ember" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4" /> Add member</Button>}
+        filterContent={(
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Select aria-label="Filter member status" value={filters.status} onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value, page: 1 }))}>
+              <option value="">All statuses</option>
+              {MEMBERSHIP_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+            </Select>
+            <Select aria-label="Filter by gender" value={filters.gender} onChange={(event) => setFilters((current) => ({ ...current, gender: event.target.value, page: 1 }))}>
+              <option value="">All genders</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option>
+            </Select>
+            <Select aria-label="Filter by membership expiry" value={filters.expiry} onChange={(event) => setFilters((current) => ({ ...current, expiry: event.target.value, page: 1 }))}>
+              <option value="">Any expiry date</option><option value="thisWeek">Expiring this week</option><option value="thisMonth">Expiring this month</option>
+            </Select>
+            <Button type="button" variant="subtle" onClick={() => { setSearchText(''); setFilters({ search: '', status: '', gender: '', expiry: '', sortBy: 'createdAt', sortOrder: 'DESC', page: 1, limit: 10 }); }}><X className="h-4 w-4" /> Clear filters</Button>
+          </div>
+        )}
         onRowClick={setSelectedMember}
       />
       <div className="mt-4 flex items-center justify-between text-sm text-steel">
@@ -504,7 +541,21 @@ function MemberForm({ open, member, plans, onClose, onSaved }) {
             })}
           />
         </Field>
-        <Field label="Emergency contact"><Input {...register('emergencyContact')} /></Field>
+        <Field label="Emergency contact" error={formState.errors.emergencyContact?.message}>
+          <Input
+            type="tel"
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="9876543210"
+            onInput={(event) => { event.currentTarget.value = event.currentTarget.value.replace(/\D/g, '').slice(0, 10); }}
+            {...register('emergencyContact', {
+              pattern: {
+                value: /^\d{10}$/,
+                message: 'Emergency contact must be exactly 10 digits',
+              },
+            })}
+          />
+        </Field>
         <Field label="DOB"><Input type="date" {...register('dob')} /></Field>
         <Field label="Gender">
           <Select {...register('gender')}>
