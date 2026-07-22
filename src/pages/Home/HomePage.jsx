@@ -1,16 +1,22 @@
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
+  CalendarCheck,
   Check,
   ChevronDown,
   Clock,
   Mail,
   MapPin,
+  MessageCircle,
   Phone,
+  Quote,
+  Send,
   ShieldCheck,
   Sparkles,
+  Star,
   Trophy,
   Zap,
+  Dumbbell,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SITE } from '../../config/site';
@@ -41,6 +47,40 @@ const features = [
   { icon: ShieldCheck, title: 'Smart member care', text: 'Plans, payments, status, and history handled cleanly.' },
   { icon: Clock, title: 'Flexible schedules', text: 'Memberships can start today or queue after the current plan.' },
   { icon: Trophy, title: 'Premium experience', text: 'A polished environment designed for consistency and confidence.' },
+];
+
+const testimonials = [
+  {
+    name: 'Aarav Mehta',
+    initials: 'AM',
+    detail: 'Strength training member',
+    quote: 'The coaches made training feel simple and structured. I am stronger, more consistent, and actually look forward to every session.',
+    featured: true,
+  },
+  {
+    name: 'Priya Shah',
+    initials: 'PS',
+    detail: 'Transformation member',
+    quote: 'The atmosphere is motivating without being intimidating. I received the right guidance from day one and could see steady progress.',
+  },
+  {
+    name: 'Rohan Patel',
+    initials: 'RP',
+    detail: 'Fitness member',
+    quote: 'Clean equipment, attentive trainers, and a team that remembers your goals. It feels like a gym that genuinely wants you to improve.',
+  },
+  {
+    name: 'Neha Desai',
+    initials: 'ND',
+    detail: 'Morning batch member',
+    quote: 'The flexible timings make consistency possible for me. Even the busiest mornings feel productive once I have trained here.',
+  },
+  {
+    name: 'Kunal Mehta',
+    initials: 'KM',
+    detail: 'Performance training member',
+    quote: 'Every session has purpose. The trainers correct the small details, track progress, and keep the energy high without compromising technique.',
+  },
 ];
 
 const faqs = [
@@ -144,50 +184,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="plans" className="scroll-mt-16 px-4 py-16 md:py-24">
-        <SectionTitle eyebrow="Membership Plans" title="Simple plans. Strong reasons to show up." />
-        <div className="mx-auto mt-10 grid max-w-7xl items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <section id="plans" className="relative scroll-mt-16 overflow-hidden px-4 py-16 md:py-24">
+        <div aria-hidden="true" className="absolute -left-40 top-1/3 h-80 w-80 rounded-full bg-ember/10 blur-3xl" />
+        <div className="relative">
+          <SectionTitle eyebrow="Membership Plans" title="Choose the plan that fits your momentum." />
+          <p className="mx-auto mt-5 max-w-2xl text-center text-sm leading-7 text-steel sm:text-base">Straightforward memberships with the coaching, flexibility, and support you need to stay consistent.</p>
+        </div>
+        <div className="relative mx-auto mt-12 grid max-w-7xl items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {plansLoading
-            ? [1, 2, 3].map((key) => <Skeleton key={key} className="h-72" />)
+            ? [1, 2, 3].map((key) => <Skeleton key={key} className="h-[470px] rounded-lg" />)
             : (plans.length ? plans : [{ name: 'Starter', duration: 30, price: 999, description: 'Add plans in admin to replace this preview.' }]).map((plan) => (
-                <motion.article key={plan.id || plan.name} whileHover={{ y: -8 }} className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-6 shadow-panel dark:border-white/10 dark:bg-white/[0.06]">
-                  <p className="text-sm font-bold uppercase tracking-[0.18em] text-ember">{plan.duration} days</p>
-                  <h3 className="mt-3 text-2xl font-black">{plan.name}</h3>
-                  <p className="mt-3 min-h-12 text-sm text-steel">{plan.description || 'Access to training floor, coaching support, and club facilities.'}</p>
-                  <p className="mt-6 text-4xl font-black">₹{Number(plan.price).toLocaleString('en-IN')}</p>
-                  <ul className="mt-6 flex-1 space-y-3 text-sm text-slate-700 dark:text-slate-200">
-                    {['Progress tracking', 'Trainer guidance', 'Clean member support'].map((item) => (
-                      <li key={item} className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-mint" /> {item}
-                      </li>
-                    ))}
-                  </ul>
-                </motion.article>
+                <PlanCard key={plan.id || plan.name} plan={plan} />
               ))}
         </div>
       </section>
 
-      <section id="trainers" className="scroll-mt-16 bg-ink px-4 py-16 text-white dark:bg-black md:py-24">
-        <SectionTitle eyebrow="Trainers" title="Coaches with presence, precision, and personality." light />
-        <div className="mx-auto mt-10 grid max-w-7xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <section id="trainers" className="scroll-mt-16 bg-slate-50 px-4 py-16 dark:bg-white/[0.02] md:py-24">
+        <SectionTitle eyebrow="Expert guidance" title="Meet the coaches behind your progress." />
+        <p className="mx-auto mt-5 max-w-2xl text-center text-sm leading-7 text-steel sm:text-base">Personal attention, practical guidance, and training that moves at the right pace for you.</p>
+        <div className="mx-auto mt-10 grid max-w-6xl gap-7">
           {trainersLoading
-            ? [1, 2, 3].map((key) => <Skeleton key={key} className="h-80 bg-white/10" />)
+            ? [1, 2].map((key) => <Skeleton key={key} className="h-[520px] rounded-lg lg:h-[480px]" />)
             : (trainers.length ? trainers : []).map((trainer) => (
-                <article key={trainer.id} className="flex h-full flex-col overflow-hidden rounded-lg bg-white/10 transition hover:-translate-y-1 hover:bg-white/[0.14]">
-                  <img
-                    src={trainer.image || fallbackImages[2]}
-                    alt={trainer.name}
-                    className="h-64 w-full object-cover"
-                  />
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="text-xl font-black">{trainer.name}</h3>
-                    <p className="mt-1 text-sm text-ember">{trainer.specialization} · {trainer.experience} yrs</p>
-                    <p className="mt-3 text-sm text-white/70">{trainer.bio || 'Focused coaching for better movement and stronger habits.'}</p>
-                  </div>
-                </article>
+                <TrainerCard key={trainer.id} trainer={trainer} gymName={gymName} ownerPhone={contact.phone || LOCATION.phone} />
               ))}
           {!trainersLoading && !trainers.length ? (
-            <p className="col-span-full rounded-lg border border-white/10 p-8 text-center text-white/70">
+            <p className="rounded-lg border border-slate-200 bg-white p-10 text-center text-steel shadow-panel dark:border-white/10 dark:bg-white/[0.06]">
               Add trainers in the admin dashboard to show them here.
             </p>
           ) : null}
@@ -209,16 +231,19 @@ export default function HomePage() {
       </section>
 
       <section className="premium-bg px-4 py-16 md:py-24">
-        <div className="mx-auto max-w-7xl rounded-lg bg-ink p-8 text-white shadow-glow md:p-12">
-          <div className="grid gap-8 md:grid-cols-[1.2fr_0.8fr] md:items-center">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-5 md:grid-cols-[1.2fr_0.8fr] md:items-end">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-gold">Testimonials</p>
-              <h2 className="mt-3 text-3xl font-black text-balance sm:text-4xl">Members stay because the experience is clean, focused, and personal.</h2>
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-ember">Member stories</p>
+              <h2 className="mt-3 max-w-3xl text-3xl font-black text-balance sm:text-4xl md:text-5xl">Real people. Real progress. A community that keeps showing up.</h2>
             </div>
-            <div className="rounded-lg bg-white/10 p-6">
-              <p className="text-lg font-semibold">“The best part is how organized everything feels, from joining to renewals. Training feels premium without feeling complicated.”</p>
-              <p className="mt-4 text-sm text-white/60">Aarav M. · Member</p>
-            </div>
+            <p className="max-w-lg text-sm leading-7 text-steel md:justify-self-end">More than workouts, members find expert support, genuine accountability, and a space where progress feels personal.</p>
+          </div>
+
+          <div className="mt-10 grid auto-rows-fr gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {testimonials.map((testimonial, index) => (
+              <TestimonialCard key={testimonial.name} testimonial={testimonial} index={index} />
+            ))}
           </div>
         </div>
       </section>
@@ -237,44 +262,291 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="contact" className="scroll-mt-16 bg-slate-50 px-4 py-16 dark:bg-white/[0.02] md:py-24">
-        <SectionTitle eyebrow="Contact" title="Ready when you are." />
-        <div className="mx-auto mt-10 grid max-w-7xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <ContactCard icon={Phone} label="Phone" value={contact.phone || LOCATION.phone} href={contact.phone ? `tel:${contact.phone.replace(/[^+\d]/g, '')}` : LOCATION.phoneHref} />
-          <ContactCard icon={Mail} label="Email" value={contact.email || 'contact@gym.com'} />
-          <ContactCard icon={MapPin} label="Address" value={contact.address || LOCATION.address} />
-          <ContactCard icon={Clock} label="Timings" value={LOCATION.hours} />
-        </div>
+      <section id="contact" className="relative scroll-mt-16 overflow-hidden bg-ink px-4 py-16 text-white dark:bg-black md:py-24">
+        <div aria-hidden="true" className="absolute -left-32 top-20 h-80 w-80 rounded-full bg-ember/15 blur-3xl" />
+        <div aria-hidden="true" className="absolute -right-32 bottom-10 h-80 w-80 rounded-full bg-mint/10 blur-3xl" />
 
-        <div className="mx-auto mt-6 grid max-w-7xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-panel dark:border-white/10 dark:bg-white/[0.06] lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.75fr)]">
-          <iframe
-            className="h-[320px] w-full border-0 sm:h-[400px] lg:h-full lg:min-h-[430px]"
-            src={LOCATION.mapUrl}
-            title={`${gymName} location on Google Maps`}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-          <div className="flex flex-col justify-center p-6 sm:p-8">
-            <span className="grid h-11 w-11 place-items-center rounded-lg bg-ember/10 text-ember"><MapPin className="h-5 w-5" /></span>
-            <p className="mt-5 text-xs font-bold uppercase tracking-[0.2em] text-ember">Find us</p>
-            <h3 className="mt-2 text-2xl font-black">{gymName}</h3>
-            <dl className="mt-6 space-y-5 text-sm">
-              <LocationDetail label="Address">{LOCATION.address}</LocationDetail>
-              <LocationDetail label="Timings">{LOCATION.hours}</LocationDetail>
-              <LocationDetail label="Call"><a className="font-bold text-ember hover:underline" href={LOCATION.phoneHref}>{LOCATION.phone}</a></LocationDetail>
-            </dl>
+        <div className="relative mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-ember">Contact us</p>
+            <h2 className="mt-3 text-3xl font-black text-balance sm:text-4xl md:text-5xl">Let’s talk about your fitness goals.</h2>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-white/60">Have a question about memberships, trainers, or your first visit? Send us a message and continue the conversation directly on WhatsApp.</p>
+          </div>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ContactCard icon={Phone} label="Phone" value={contact.phone || LOCATION.phone} href={contact.phone ? `tel:${contact.phone.replace(/[^+\d]/g, '')}` : LOCATION.phoneHref} />
+          <ContactCard icon={Mail} label="Email" value={contact.email || 'contact@gym.com'} href={`mailto:${contact.email || 'contact@gym.com'}`} />
+          <ContactCard icon={MapPin} label="Address" value={contact.address || LOCATION.address} />
+          <ContactCard icon={Clock} label="Timings" value={contact.hours || LOCATION.hours} />
+          </div>
+
+          <div className="mt-6 grid overflow-hidden rounded-lg border border-white/10 bg-white/[0.06] shadow-2xl backdrop-blur lg:grid-cols-[minmax(0,1.3fr)_minmax(380px,0.7fr)]">
+            <ContactForm gymName={gymName} ownerPhone={contact.phone || LOCATION.phone} />
+            <div className="relative order-1 min-h-[430px] border-b border-white/10 sm:min-h-[500px] lg:min-h-[680px] lg:border-b-0 lg:border-r">
+              <iframe
+                className="absolute inset-0 h-full w-full border-0 grayscale-[20%] contrast-[1.05]"
+                src={LOCATION.mapUrl}
+                title={`${gymName} location on Google Maps`}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              <div className="pointer-events-none absolute inset-x-4 bottom-4 rounded-lg border border-white/20 bg-black/75 p-4 backdrop-blur-md sm:inset-x-6 sm:bottom-6">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-ember">Find us</p>
+                <p className="mt-2 text-sm font-semibold leading-6 text-white">{contact.address || LOCATION.address}</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-slate-200 px-4 py-8 dark:border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-steel md:flex-row md:items-center md:justify-between">
-          <p className="font-semibold">{gymName}</p>
-          <p>{contentLoading ? 'Syncing website content...' : 'Train with intent. Manage with clarity.'}</p>
+      <footer className="relative overflow-hidden bg-[#090b0f] px-4 pb-8 pt-16 text-white md:pt-20">
+        <div aria-hidden="true" className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-ember/15 blur-3xl" />
+        <div aria-hidden="true" className="absolute -bottom-40 left-1/4 h-80 w-80 rounded-full bg-mint/10 blur-3xl" />
+
+        <div className="relative mx-auto max-w-7xl">
+          <div className="mb-14 flex flex-col gap-6 rounded-lg border border-white/10 bg-white/[0.06] p-6 backdrop-blur sm:p-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-ember">Your strongest chapter starts here</p>
+              <h2 className="mt-3 text-2xl font-black text-balance sm:text-3xl">Ready to make your goals non-negotiable?</h2>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <a href="#plans"><Button variant="accent" className="w-full sm:w-auto">View plans <ArrowRight className="h-5 w-5" /></Button></a>
+              <a href="#contact"><Button variant="subtle" className="w-full bg-white/10 text-white ring-white/15 hover:bg-white/20 sm:w-auto">Book a visit</Button></a>
+            </div>
+          </div>
+
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_0.75fr_0.75fr_1.15fr]">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <a href="#hero" className="inline-flex items-center gap-3" aria-label={`${gymName} home`}>
+                <BrandMark logo={logo} />
+                <span className="text-lg font-black">{gymName}</span>
+              </a>
+              <p className="mt-5 max-w-sm text-sm leading-7 text-white/55">A premium training space built for better movement, stronger habits, and progress you can feel.</p>
+              <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/65">
+                <Dumbbell className="h-4 w-4 text-ember" /> Train with intent
+              </div>
+            </div>
+
+            <FooterLinks title="Explore" links={[['About', '#about'], ['Plans', '#plans'], ['Trainers', '#trainers'], ['Gallery', '#gallery']]} />
+            <FooterLinks title="Support" links={[['FAQs', '#faq'], ['Contact', '#contact'], ['Member login', '/member/login'], ['Admin login', '/admin/login']]} internal />
+
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-[0.16em] text-white">Visit us</h3>
+              <ul className="mt-5 space-y-4 text-sm text-white/55">
+                <li className="flex gap-3"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-ember" /><span className="leading-6">{contact.address || LOCATION.address}</span></li>
+                <li><a href={contact.phone ? `tel:${contact.phone.replace(/[^+\d]/g, '')}` : LOCATION.phoneHref} className="flex items-center gap-3 transition hover:text-white"><Phone className="h-4 w-4 shrink-0 text-ember" />{contact.phone || LOCATION.phone}</a></li>
+                <li className="flex items-center gap-3"><Clock className="h-4 w-4 shrink-0 text-ember" />{contact.hours || LOCATION.hours}</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-14 flex flex-col gap-3 border-t border-white/10 pt-7 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
+            <p>© {new Date().getFullYear()} {gymName}. All rights reserved.</p>
+            <p>{contentLoading ? 'Syncing website content...' : 'Stronger every day. Together.'}</p>
+          </div>
         </div>
       </footer>
     </main>
+  );
+}
+
+function FooterLinks({ title, links, internal = false }) {
+  return (
+    <div>
+      <h3 className="text-sm font-black uppercase tracking-[0.16em] text-white">{title}</h3>
+      <ul className="mt-5 space-y-3 text-sm text-white/55">
+        {links.map(([label, href]) => (
+          <li key={label}>
+            {internal && href.startsWith('/')
+              ? <Link to={href} className="transition hover:text-ember">{label}</Link>
+              : <a href={href} className="transition hover:text-ember">{label}</a>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function PlanCard({ plan }) {
+  const popular = Boolean(plan.isPopular);
+  const benefits = ['Full training-floor access', 'Trainer guidance', 'Progress tracking', 'Friendly member support'];
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 22 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.4 }}
+      className={`relative flex h-full min-h-[470px] flex-col overflow-hidden rounded-lg border p-6 sm:p-7 ${
+        popular
+          ? 'border-ember bg-ink text-white shadow-glow ring-1 ring-ember/40'
+          : 'border-slate-200 bg-white text-ink shadow-panel hover:shadow-xl dark:border-white/10 dark:bg-white/[0.06] dark:text-white'
+      }`}
+    >
+      {popular ? (
+        <>
+          <div aria-hidden="true" className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-ember/25 blur-3xl" />
+          <div className="relative -mx-1 mb-6 flex items-center justify-between gap-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-ember px-3 py-1.5 text-xs font-black uppercase tracking-[0.12em] text-white shadow-lg shadow-ember/20">
+              <Star className="h-3.5 w-3.5 fill-current" /> Most popular
+            </span>
+            <span className="text-xs font-bold uppercase tracking-[0.15em] text-white/40">Member favorite</span>
+          </div>
+        </>
+      ) : (
+        <p className="mb-6 text-xs font-bold uppercase tracking-[0.18em] text-ember">Membership</p>
+      )}
+
+      <div className="relative">
+        <h3 className="text-2xl font-black sm:text-3xl">{plan.name}</h3>
+        <p className={`mt-3 min-h-12 text-sm leading-6 ${popular ? 'text-white/60' : 'text-steel'}`}>
+          {plan.description || 'Everything you need to train consistently and make meaningful progress.'}
+        </p>
+      </div>
+
+      <div className={`relative mt-7 border-y py-6 ${popular ? 'border-white/10' : 'border-slate-100 dark:border-white/10'}`}>
+        <div className="flex items-end gap-2">
+          <span className="text-4xl font-black tracking-tight sm:text-5xl">₹{Number(plan.price).toLocaleString('en-IN')}</span>
+        </div>
+        <p className={`mt-2 text-xs font-semibold ${popular ? 'text-white/45' : 'text-steel'}`}>for {plan.duration} days of membership</p>
+      </div>
+
+      <ul className={`relative mt-6 flex-1 space-y-3.5 text-sm ${popular ? 'text-white/75' : 'text-slate-700 dark:text-slate-200'}`}>
+        {benefits.map((item) => (
+          <li key={item} className="flex items-center gap-3">
+            <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full ${popular ? 'bg-mint/15 text-mint' : 'bg-emerald-50 text-emerald-600 dark:bg-mint/10 dark:text-mint'}`}>
+              <Check className="h-3.5 w-3.5" />
+            </span>
+            {item}
+          </li>
+        ))}
+      </ul>
+
+      <a href="#contact" className="relative mt-8">
+        <Button variant={popular ? 'accent' : 'primary'} className="w-full py-3">
+          Choose {plan.name} <ArrowRight className="h-4 w-4" />
+        </Button>
+      </a>
+    </motion.article>
+  );
+}
+
+function TrainerCard({ trainer, gymName, ownerPhone }) {
+  const experience = Number(trainer.experience) || 0;
+  const phoneHref = `tel:${ownerPhone.replace(/[^+\d]/g, '')}`;
+  const specialties = String(trainer.specialization || 'Fitness coaching')
+    .split(/[,/|]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5 }}
+      className="group grid overflow-hidden rounded-lg border border-slate-200 bg-white shadow-panel transition-shadow hover:shadow-2xl dark:border-white/10 dark:bg-white/[0.06] lg:grid-cols-[minmax(320px,420px)_1fr]"
+    >
+      <div className="p-4 pb-0 sm:p-6 sm:pb-0 lg:p-7 lg:pr-0">
+        <div className="relative h-[390px] overflow-hidden rounded-lg bg-slate-100 sm:h-[460px] lg:h-full lg:min-h-[430px] dark:bg-white/5">
+          <img
+            src={trainer.image || fallbackImages[2]}
+            alt={`${trainer.name}, ${trainer.specialization || 'fitness coach'}`}
+            className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-[1.03]"
+          />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 to-transparent" />
+          <span className="absolute bottom-4 left-4 rounded-full border border-white/20 bg-black/60 px-3 py-1.5 text-xs font-bold text-white backdrop-blur">
+            {experience ? `${experience}+ years coaching` : 'Professional coach'}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10 xl:p-12">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-ember">Meet your coach</p>
+        <h3 className="mt-3 text-3xl font-black text-ink sm:text-4xl dark:text-white">{trainer.name}</h3>
+        <p className="mt-2 text-sm font-bold text-steel">{trainer.specialization || 'Fitness'} Coach · {gymName}</p>
+        <p className="mt-5 max-w-2xl text-sm leading-7 text-steel sm:text-base">
+          {trainer.bio || 'Focused coaching for better movement, stronger habits, and steady progress you can measure.'}
+        </p>
+
+        <div className="mt-7 grid gap-3 sm:grid-cols-3">
+          <CoachStat value={experience ? `${experience}+ yrs` : 'Expert'} label="Experience" />
+          <CoachStat value={trainer.specialization || 'Fitness'} label="Training focus" />
+          <CoachStat value="Personal" label="Coaching approach" />
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          {specialties.map((specialty) => (
+            <span key={specialty} className="rounded-full border border-ember/20 bg-ember/[0.07] px-3 py-1.5 text-xs font-bold text-ember">{specialty}</span>
+          ))}
+          <span className="rounded-full border border-mint/25 bg-mint/10 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:text-mint">Goal-focused</span>
+        </div>
+
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <a href="#contact"><Button variant="accent" className="w-full sm:w-auto"><CalendarCheck className="h-4 w-4" /> Book a session</Button></a>
+          <a href={phoneHref}><Button variant="subtle" className="w-full sm:w-auto"><Phone className="h-4 w-4 text-ember" /> Call the gym</Button></a>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
+function CoachStat({ value, label }) {
+  return (
+    <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.05]">
+      <p className="truncate text-sm font-black text-ink dark:text-white" title={String(value)}>{value}</p>
+      <p className="mt-1 text-xs font-semibold text-steel">{label}</p>
+    </div>
+  );
+}
+
+function TestimonialCard({ testimonial, index }) {
+  const featured = testimonial.featured;
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.45, delay: index * 0.06 }}
+      whileHover={{ y: -6 }}
+      className={`relative flex h-full min-h-72 flex-col overflow-hidden rounded-lg border p-6 transition-shadow sm:p-7 ${
+        featured
+          ? 'border-white/10 bg-ink text-white shadow-glow lg:col-span-2'
+          : 'border-slate-200 bg-white text-ink shadow-panel hover:shadow-xl dark:border-white/10 dark:bg-white/[0.07] dark:text-white'
+      }`}
+    >
+      {featured ? (
+        <>
+          <div aria-hidden="true" className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-ember/20 blur-3xl" />
+          <div aria-hidden="true" className="absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-mint/10 blur-3xl" />
+        </>
+      ) : null}
+
+      <div className="relative flex items-center justify-between gap-4">
+        <div className="flex gap-1 text-gold" aria-label="5 out of 5 stars">
+          {[1, 2, 3, 4, 5].map((star) => <Star key={star} className="h-4 w-4 fill-current" />)}
+        </div>
+        <Quote className={`h-8 w-8 ${featured ? 'text-white/15' : 'text-ember/15 dark:text-white/15'}`} />
+      </div>
+
+      <blockquote className={`relative mt-7 flex-1 font-semibold leading-relaxed ${featured ? 'max-w-3xl text-xl sm:text-2xl' : 'text-base'}`}>
+        “{testimonial.quote}”
+      </blockquote>
+
+      <div className={`relative mt-8 flex items-center gap-3 border-t pt-5 ${featured ? 'border-white/10' : 'border-slate-100 dark:border-white/10'}`}>
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-ember to-orange-400 text-xs font-black text-white shadow-lg shadow-ember/20">
+          {testimonial.initials}
+        </span>
+        <div>
+          <p className="text-sm font-black">{testimonial.name}</p>
+          <p className={`mt-0.5 text-xs ${featured ? 'text-white/50' : 'text-steel'}`}>{testimonial.detail}</p>
+        </div>
+      </div>
+    </motion.article>
   );
 }
 
@@ -289,14 +561,70 @@ function SectionTitle({ eyebrow, title, light = false }) {
 
 function ContactCard({ icon: Icon, label, value, href }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-panel dark:border-white/10 dark:bg-white/[0.06]">
-      <Icon className="h-6 w-6 text-ember" />
-      <p className="mt-4 text-sm font-bold uppercase tracking-[0.18em] text-steel">{label}</p>
-      {href ? <a href={href} className="mt-2 block break-words font-black hover:text-ember hover:underline">{value}</a> : <p className="mt-2 break-words font-black">{value}</p>}
+    <div className="group rounded-lg border border-white/10 bg-white/[0.06] p-5 transition hover:-translate-y-1 hover:border-ember/40 hover:bg-white/[0.09]">
+      <span className="grid h-10 w-10 place-items-center rounded-lg bg-ember/15 text-ember transition group-hover:bg-ember group-hover:text-white"><Icon className="h-5 w-5" /></span>
+      <p className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-white/40">{label}</p>
+      {href ? <a href={href} className="mt-2 block break-words text-sm font-bold leading-6 text-white transition hover:text-ember">{value}</a> : <p className="mt-2 break-words text-sm font-bold leading-6 text-white">{value}</p>}
     </div>
   );
 }
 
-function LocationDetail({ label, children }) {
-  return <div><dt className="font-bold text-slate-900 dark:text-white">{label}</dt><dd className="mt-1 leading-6 text-steel">{children}</dd></div>;
+function ContactForm({ gymName, ownerPhone }) {
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const message = [
+      `Hello ${gymName}, I have an enquiry.`,
+      '',
+      `Name: ${data.get('name')}`,
+      `Phone: ${data.get('phone')}`,
+      data.get('email') ? `Email: ${data.get('email')}` : null,
+      '',
+      `Message: ${data.get('message')}`,
+    ].filter(Boolean).join('\n');
+    const phoneDigits = ownerPhone.replace(/\D/g, '');
+    const whatsappNumber = phoneDigits.length === 10 ? `91${phoneDigits}` : phoneDigits;
+
+    window.location.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+  };
+
+  const fieldClassName = 'mt-2 w-full rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-ember focus:ring-2 focus:ring-ember/20';
+
+  return (
+    <div className="order-2 flex flex-col justify-center p-6 sm:p-8 lg:p-9 xl:p-10">
+      <div className="flex items-start gap-4">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-[#25D366]/15 text-[#54e685]"><MessageCircle className="h-5 w-5" /></span>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#54e685]">WhatsApp us</p>
+          <h3 className="mt-1 text-2xl font-black">Send a message</h3>
+        </div>
+      </div>
+      <p className="mt-5 text-sm leading-6 text-white/50">Fill in the details below. We’ll open WhatsApp with your message ready to send.</p>
+
+      <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <label className="text-sm font-semibold text-white/75">
+            Your name <span className="text-ember">*</span>
+            <input className={fieldClassName} name="name" type="text" placeholder="Enter your name" autoComplete="name" required />
+          </label>
+          <label className="text-sm font-semibold text-white/75">
+            Phone number <span className="text-ember">*</span>
+            <input className={fieldClassName} name="phone" type="tel" placeholder="Enter your number" autoComplete="tel" required />
+          </label>
+        </div>
+        <label className="block text-sm font-semibold text-white/75">
+          Email address <span className="font-normal text-white/35">(optional)</span>
+          <input className={fieldClassName} name="email" type="email" placeholder="you@example.com" autoComplete="email" />
+        </label>
+        <label className="block text-sm font-semibold text-white/75">
+          How can we help? <span className="text-ember">*</span>
+          <textarea className={`${fieldClassName} min-h-32 resize-y`} name="message" placeholder="Tell us about your goals or ask a question..." required />
+        </label>
+        <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#25D366] px-5 py-3.5 text-sm font-black text-[#07170d] shadow-lg shadow-[#25D366]/15 transition hover:-translate-y-0.5 hover:bg-[#54e685] focus:outline-none focus:ring-2 focus:ring-[#54e685] focus:ring-offset-2 focus:ring-offset-ink">
+          Continue to WhatsApp <Send className="h-4 w-4" />
+        </button>
+        <p className="text-center text-xs leading-5 text-white/35">WhatsApp will open with your details pre-filled. Review the message, then tap send.</p>
+      </form>
+    </div>
+  );
 }

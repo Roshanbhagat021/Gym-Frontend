@@ -32,6 +32,7 @@ export default function PlansPage() {
           { key: 'name', header: 'Plan', render: (row) => <div><p className="font-bold">{row.name}</p><p className="text-xs text-steel">{row.description || 'No description'}</p></div> },
           { key: 'duration', header: 'Duration', render: (row) => `${row.duration} days` },
           { key: 'price', header: 'Price', render: (row) => currency(row.price) },
+          { key: 'isPopular', header: 'Popular', render: (row) => row.isPopular ? <span className="rounded-full bg-ember/10 px-2.5 py-1 text-xs font-bold text-ember">Popular</span> : 'No' },
           { key: 'isActive', header: 'Active', render: (row) => row.isActive ? 'Yes' : 'No' },
           { key: 'createdAt', header: 'Created', render: (row) => shortDate(row.createdAt) },
           { key: 'actions', header: 'Actions', render: (row) => <Actions row={row} onEdit={() => { setEditing(row); setOpen(true); }} onDelete={() => setDeleting(row)} /> },
@@ -55,13 +56,20 @@ function PlanForm({ open, plan, onClose, onSaved }) {
       price: plan?.price || '',
       description: plan?.description || '',
       isActive: plan?.isActive ?? true,
+      isPopular: plan?.isPopular ?? false,
     },
   });
   const submit = async (values) => {
-    const payload = { ...values, duration: Number(values.duration), price: Number(values.price), isActive: values.isActive === 'true' || values.isActive === true };
+    const payload = {
+      ...values,
+      duration: Number(values.duration),
+      price: Number(values.price),
+      isActive: values.isActive === 'true' || values.isActive === true,
+      isPopular: values.isPopular === 'true' || values.isPopular === true,
+    };
     if (plan) await adminApi.updatePlan(plan.id, payload);
     else await adminApi.createPlan(payload);
     onSaved();
   };
-  return <FormModal open={open} title={plan ? 'Edit plan' : 'Add plan'} onClose={onClose}><form onSubmit={handleSubmit(submit)} className="grid gap-4 md:grid-cols-2"><Field label="Name"><Input {...register('name', { required: true })} /></Field><Field label="Duration"><Input type="number" {...register('duration', { required: true })} /></Field><Field label="Price"><Input type="number" step="0.01" {...register('price', { required: true })} /></Field><Field label="Active"><select className="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-[#181a20]" {...register('isActive')}><option value="true">Yes</option><option value="false">No</option></select></Field><div className="md:col-span-2"><Field label="Description"><Textarea {...register('description')} /></Field><FormActions isSubmitting={formState.isSubmitting} onCancel={onClose} submitLabel="Save plan" /></div></form></FormModal>;
+  return <FormModal open={open} title={plan ? 'Edit plan' : 'Add plan'} onClose={onClose}><form onSubmit={handleSubmit(submit)} className="grid gap-4 md:grid-cols-2"><Field label="Name"><Input {...register('name', { required: true })} /></Field><Field label="Duration"><Input type="number" {...register('duration', { required: true })} /></Field><Field label="Price"><Input type="number" step="0.01" {...register('price', { required: true })} /></Field><Field label="Active"><select className="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-[#181a20]" {...register('isActive')}><option value="true">Yes</option><option value="false">No</option></select></Field><Field label="Mark as popular"><select className="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-[#181a20]" {...register('isPopular')}><option value="false">No</option><option value="true">Yes</option></select></Field><div className="md:col-span-2"><Field label="Description"><Textarea {...register('description')} /></Field><p className="mt-2 text-xs text-steel">Marking this plan as popular automatically removes the tag from any other plan.</p><FormActions isSubmitting={formState.isSubmitting} onCancel={onClose} submitLabel="Save plan" /></div></form></FormModal>;
 }

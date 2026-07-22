@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { CalendarDays, CreditCard, Edit3, Mail, MapPin, Phone, Plus, RefreshCw, Search, Trash2, UserRound, X } from 'lucide-react';
+import { Ban, CalendarDays, CreditCard, Edit3, LockKeyhole, Mail, MapPin, Phone, Plus, RefreshCw, RotateCcw, Search, Trash2, UserRound, X } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { DataTable } from '../../components/common/DataTable';
 import { FormModal } from '../../components/common/FormModal';
@@ -133,7 +133,17 @@ export default function MembersPage() {
           <Button variant="subtle" disabled={(meta.page || 1) >= (meta.totalPages || 1)} onClick={() => setFilters((current) => ({ ...current, page: current.page + 1 }))}>Next</Button>
         </div>
       </div>
-      <MemberForm open={open} member={editing} plans={plans} onClose={() => setOpen(false)} onSaved={() => { setOpen(false); execute(); }} />
+      <MemberForm
+        open={open}
+        member={editing}
+        plans={plans}
+        onClose={() => setOpen(false)}
+        onRenew={() => {
+          setOpen(false);
+          setRenewing(editing);
+        }}
+        onSaved={() => { setOpen(false); execute(); }}
+      />
       <MemberDetailsDrawer
         member={selectedMember}
         onClose={() => setSelectedMember(null)}
@@ -286,10 +296,11 @@ function DetailItem({ icon: Icon, label, value }) {
 }
 
 function getCurrentMembership(memberships = []) {
-  const now = new Date();
-  return memberships
-    .filter((membership) => new Date(membership.expiryDate) >= now)
+  const active = memberships.find((membership) => membership.status === 'ACTIVE');
+  const upcoming = memberships
+    .filter((membership) => membership.status === 'UPCOMING')
     .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))[0];
+  return active || upcoming || getRelevantMembership(memberships);
 }
 
 function RenewPlanModal({ open, member, plans, onClose, onSaved }) {
@@ -429,11 +440,14 @@ function RenewPlanModal({ open, member, plans, onClose, onSaved }) {
   );
 }
 
-function MemberForm({ open, member, plans, onClose, onSaved }) {
+function MemberForm({ open, member, plans, onClose, onRenew, onSaved }) {
   const [couponCode, setCouponCode] = useState('');
   const [coupon, setCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
+  const [membershipAction, setMembershipAction] = useState('');
+  const [pendingValues, setPendingValues] = useState(null);
+  const [actionSaving, setActionSaving] = useState(false);
   const { register, handleSubmit, formState, reset, watch, setValue } = useForm({
     values: {
       name: getMemberName(member) === 'Unknown member' ? '' : getMemberName(member),
@@ -457,12 +471,26 @@ function MemberForm({ open, member, plans, onClose, onSaved }) {
   const planAmount = Number(selectedPlan?.price || 0);
   const discountAmount = calculateDiscount(coupon, planAmount);
   const payableAmount = Math.max(planAmount - discountAmount, 0);
+  const currentMembership = useMemo(
+    () => getRelevantMembership(member?.memberships || []),
+    [member],
+  );
+  const canReactivate = Boolean(
+    currentMembership &&
+    currentMembership.status === 'CANCELLED' &&
+    isDateCurrentOrFuture(currentMembership.expiryDate),
+  );
 
   useEffect(() => {
     setCouponCode('');
     setCoupon(null);
     setCouponError('');
   }, [activePlanId]);
+
+  useEffect(() => {
+    setMembershipAction('');
+    setPendingValues(null);
+  }, [member?.id, open]);
 
   const applyCoupon = async () => {
     const code = couponCode.trim();
@@ -490,7 +518,7 @@ function MemberForm({ open, member, plans, onClose, onSaved }) {
     }
   };
 
-  const submit = async (values) => {
+  const persistMember = async (values) => {
     const payload = clean(values);
     const selectedPlanId = payload.activePlanId;
     delete payload.activePlanId;
@@ -514,6 +542,10 @@ function MemberForm({ open, member, plans, onClose, onSaved }) {
       });
     }
 
+    if (member && membershipAction) {
+      await adminApi.changeMemberAccess(member.id, membershipAction);
+    }
+
     reset();
     setCouponCode('');
     setCoupon(null);
@@ -521,12 +553,35 @@ function MemberForm({ open, member, plans, onClose, onSaved }) {
     onSaved();
   };
 
+  const submit = async (values) => {
+    if (member && membershipAction) {
+      setPendingValues(values);
+      return;
+    }
+    await persistMember(values);
+  };
+
+  const confirmMembershipAction = async () => {
+    if (!pendingValues) return;
+    setActionSaving(true);
+    try {
+      await persistMember(pendingValues);
+      setPendingValues(null);
+    } finally {
+      setActionSaving(false);
+    }
+  };
+
   return (
+    <>
     <FormModal open={open} title={member ? 'Edit member' : 'Add member'} onClose={onClose}>
       <form onSubmit={handleSubmit(submit)} className="grid gap-4 md:grid-cols-2">
         <Field label="Name" error={formState.errors.name?.message}><Input {...register('name', { required: 'Name is required' })} /></Field>
         <Field label="Email" error={formState.errors.email?.message}><Input type="email" {...register('email', { required: 'Email is required' })} /></Field>
-        <Field label={member ? 'New password' : 'Password'} error={formState.errors.password?.message}><Input type="password" {...register('password', member ? {} : { required: 'Password is required', minLength: { value: 6, message: 'Minimum 6 characters' } })} /></Field>
+        <Field label={member ? 'New password (optional)' : 'Password'} error={formState.errors.password?.message}><Input type="password" placeholder={member ? 'Leave blank to keep current password' : 'Minimum 6 characters'} {...register('password', {
+          required: member ? false : 'Password is required',
+          validate: (value) => !value || value.length >= 6 || 'Minimum 6 characters',
+        })} /></Field>
         <Field label="Mobile" error={formState.errors.mobile?.message}>
           <Input
             inputMode="numeric"
@@ -565,13 +620,23 @@ function MemberForm({ open, member, plans, onClose, onSaved }) {
             <option value="Other">Other</option>
           </Select>
         </Field>
-        <Field label="Assign plan"><Select {...register('activePlanId')}><option value="">No new plan</option>{plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}</Select></Field>
+        {!member ? <Field label="Assign plan"><Select {...register('activePlanId')}><option value="">No plan</option>{plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}</Select></Field> : null}
         <ImageUploadField
           label="Profile image"
           value={profileImage}
           onChange={(url) => setValue('profileImage', url, { shouldDirty: true })}
         />
         <Field label="Address"><Input {...register('address')} /></Field>
+        {member ? (
+          <MembershipAccessPanel
+            member={member}
+            membership={currentMembership}
+            action={membershipAction}
+            canReactivate={canReactivate}
+            onActionChange={setMembershipAction}
+            onRenew={onRenew}
+          />
+        ) : null}
         {selectedPlan ? (
           <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
             <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -618,10 +683,98 @@ function MemberForm({ open, member, plans, onClose, onSaved }) {
             </div>
           </div>
         ) : null}
-        <div className="md:col-span-2"><FormActions isSubmitting={formState.isSubmitting} onCancel={onClose} submitLabel={member ? 'Update member' : 'Create member'} /></div>
+        <div className="md:col-span-2"><FormActions isSubmitting={formState.isSubmitting || actionSaving} onCancel={onClose} submitLabel={member ? 'Update member' : 'Create member'} /></div>
       </form>
     </FormModal>
+    <ConfirmModal
+      open={Boolean(pendingValues)}
+      title={membershipAction === 'CANCEL' ? 'Cancel membership access?' : 'Reactivate membership access?'}
+      description={membershipAction === 'CANCEL'
+        ? 'The member will lose current and queued gym access. Their profile and payment history will be preserved.'
+        : 'The membership will be restored using its existing start and expiry dates.'}
+      confirmLabel={membershipAction === 'CANCEL' ? 'Cancel membership' : 'Reactivate'}
+      confirmVariant={membershipAction === 'CANCEL' ? 'danger' : 'accent'}
+      confirming={actionSaving}
+      onClose={() => setPendingValues(null)}
+      onConfirm={confirmMembershipAction}
+    />
+    </>
   );
+}
+
+function MembershipAccessPanel({ member, membership, action, canReactivate, onActionChange, onRenew }) {
+  const status = member.membershipStatus;
+  const planName = membership?.planName || membership?.plan?.name || 'No plan assigned';
+  const canCancel = status === 'ACTIVE' || status === 'UPCOMING';
+  const needsRenewal = status === 'EXPIRED' || (status === 'CANCELLED' && !canReactivate);
+
+  return (
+    <section className="md:col-span-2 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.04]">
+      <div className="flex flex-col gap-3 border-b border-slate-200 p-4 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-steel">Current membership</p>
+          <p className="mt-1 text-lg font-black">{planName}</p>
+        </div>
+        <StatusBadge value={status} />
+      </div>
+
+      <div className="p-4">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Summary label="Plan" value={planName} />
+          <Summary label="Start date" value={membership ? shortDate(membership.startDate) : '-'} />
+          <Summary label="Expiry date" value={membership ? shortDate(membership.expiryDate) : '-'} />
+        </div>
+
+        <div className="mt-4 flex items-start gap-2 rounded-lg bg-white p-3 text-xs leading-5 text-steel dark:bg-white/5">
+          <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-ember" />
+          <p><strong className="text-slate-700 dark:text-slate-200">Status is date-controlled.</strong> Upcoming and expired states are calculated automatically. Admins can only cancel valid access or reactivate a cancelled membership that has not expired.</p>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {canCancel ? (
+            <Button
+              type="button"
+              variant={action === 'CANCEL' ? 'danger' : 'dangerSubtle'}
+              onClick={() => onActionChange(action === 'CANCEL' ? '' : 'CANCEL')}
+            >
+              <Ban className="h-4 w-4" /> {action === 'CANCEL' ? 'Cancellation selected' : 'Cancel membership'}
+            </Button>
+          ) : null}
+          {status === 'CANCELLED' && canReactivate ? (
+            <Button
+              type="button"
+              variant={action === 'REACTIVATE' ? 'accent' : 'subtle'}
+              onClick={() => onActionChange(action === 'REACTIVATE' ? '' : 'REACTIVATE')}
+            >
+              <RotateCcw className="h-4 w-4" /> {action === 'REACTIVATE' ? 'Reactivation selected' : 'Reactivate membership'}
+            </Button>
+          ) : null}
+          {needsRenewal ? (
+            <Button type="button" variant="accent" onClick={onRenew}>
+              <RefreshCw className="h-4 w-4" /> Renew membership
+            </Button>
+          ) : null}
+          {action ? <p className="text-xs font-semibold text-steel">Save the form to review and confirm this access change.</p> : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function getRelevantMembership(memberships = []) {
+  const ordered = [...memberships].sort(
+    (a, b) => new Date(b.expiryDate) - new Date(a.expiryDate),
+  );
+  return ordered.find((membership) => membership.status === 'ACTIVE')
+    || ordered.find((membership) => membership.status === 'UPCOMING')
+    || ordered[0];
+}
+
+function isDateCurrentOrFuture(value) {
+  if (!value) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(value).getTime() >= today.getTime();
 }
 
 function Summary({ label, value, strong }) {

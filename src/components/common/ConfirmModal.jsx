@@ -1,7 +1,7 @@
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '../ui/Button';
 
-export function ConfirmModal({ open, title, description, onConfirm, onClose }) {
+export function ConfirmModal({ open, title, description, confirmLabel = 'Confirm', confirmVariant = 'danger', confirming = false, onConfirm, onClose }) {
   if (!open) return null;
 
   return (
@@ -17,8 +17,8 @@ export function ConfirmModal({ open, title, description, onConfirm, onClose }) {
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-3">
-          <Button variant="subtle" onClick={onClose}>Cancel</Button>
-          <Button variant="danger" onClick={onConfirm}>Confirm</Button>
+          <Button variant="subtle" onClick={onClose} disabled={confirming}>Cancel</Button>
+          <Button variant={confirmVariant} onClick={onConfirm} disabled={confirming}>{confirming ? 'Saving...' : confirmLabel}</Button>
         </div>
       </div>
     </div>

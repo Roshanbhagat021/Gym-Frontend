@@ -25,6 +25,7 @@ export default function CmsPage() {
       phone: content?.contactInformation?.phone || '',
       email: content?.contactInformation?.email || '',
       address: content?.contactInformation?.address || '',
+      hours: content?.contactInformation?.hours || '',
       facebook: content?.socialLinks?.facebook || '',
       instagram: content?.socialLinks?.instagram || '',
     },
@@ -38,7 +39,12 @@ export default function CmsPage() {
       aboutSection: values.aboutSection,
       heroBanners: lines(values.heroBanners),
       galleryImages: lines(values.galleryImages),
-      contactInformation: { phone: values.phone, email: values.email, address: values.address },
+      contactInformation: {
+        phone: values.phone,
+        email: values.email,
+        address: values.address,
+        hours: values.hours,
+      },
       socialLinks: { facebook: values.facebook, instagram: values.instagram },
     });
     setContent(updatedContent);
@@ -81,6 +87,7 @@ export default function CmsPage() {
             <Field label="Phone"><Input {...register('phone')} /></Field>
             <Field label="Email"><Input type="email" {...register('email')} /></Field>
             <Field label="Address"><Input {...register('address')} /></Field>
+            <Field label="Gym timings"><Input placeholder="e.g. 5:00 AM - 11:00 PM" {...register('hours')} /></Field>
             <Field label="Facebook"><Input {...register('facebook')} /></Field>
             <Field label="Instagram"><Input {...register('instagram')} /></Field>
             <div className="md:col-span-2">

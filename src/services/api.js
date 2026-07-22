@@ -17,6 +17,8 @@ export const adminApi = {
     request(apiClient.post('/members', payload), { successMessage: 'Member created' }),
   updateMember: (id, payload) =>
     request(apiClient.patch(`/members/${id}`, payload), { successMessage: 'Member updated' }),
+  changeMemberAccess: (id, action) =>
+    request(apiClient.patch(`/members/${id}/membership-access`, { action }), { successMessage: action === 'CANCEL' ? 'Membership cancelled' : 'Membership reactivated' }),
   deleteMember: (id) =>
     request(apiClient.delete(`/members/${id}`), { successMessage: 'Member removed' }),
 
