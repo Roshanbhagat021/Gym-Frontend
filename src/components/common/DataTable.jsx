@@ -67,9 +67,9 @@ export function DataTable({
 
   const toolbar = searchable || toolbarActions || filterContent ? (
     <>
-    <div className="mb-3 flex flex-col justify-end gap-2 sm:flex-row">
+    <div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-row sm:justify-end">
       {searchable ? (
-      <label className="relative block w-full sm:w-72">
+      <label className="relative col-span-2 block w-full sm:col-auto sm:w-72">
         <span className="sr-only">Search listing</span>
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-steel" />
         <input
@@ -83,7 +83,7 @@ export function DataTable({
       ) : null}
       {toolbarActions}
       {filterContent ? (
-        <button type="button" onClick={() => setFiltersOpen((current) => !current)} className={`inline-flex min-h-10 w-11 items-center justify-center rounded-md text-white transition ${filtersOpen ? 'bg-ember' : 'bg-[#93472f] hover:bg-[#7d3925]'}`} aria-label="Toggle filters" aria-expanded={filtersOpen}>
+        <button type="button" onClick={() => setFiltersOpen((current) => !current)} className={`inline-flex min-h-10 w-11 items-center justify-center rounded-md text-white shadow-sm transition hover:-translate-y-0.5 ${filtersOpen ? 'bg-ember shadow-ember/25' : 'bg-[#93472f] hover:bg-[#7d3925]'}`} aria-label="Toggle filters" aria-expanded={filtersOpen}>
           <Filter className="h-4 w-4" />
         </button>
       ) : null}

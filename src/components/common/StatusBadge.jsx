@@ -1,4 +1,5 @@
 const tone = {
+  NO_MEMBERSHIP: 'bg-slate-100 text-slate-600 ring-1 ring-slate-200 dark:bg-white/10 dark:text-slate-300 dark:ring-white/10',
   ACTIVE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
   COMPLETED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
   UPCOMING: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
@@ -12,7 +13,7 @@ const tone = {
 export function StatusBadge({ value }) {
   return (
     <span className={`inline-flex rounded-lg px-2.5 py-1 text-xs font-bold ${tone[value] || tone.EXPIRED}`}>
-      {value || 'N/A'}
+      {value ? String(value).replaceAll('_', ' ') : 'N/A'}
     </span>
   );
 }

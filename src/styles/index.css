@@ -62,3 +62,287 @@ select {
 .text-balance {
   text-wrap: balance;
 }
+
+.gym-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-items: center;
+  overflow: hidden;
+  padding: 1.5rem;
+  background:
+    linear-gradient(115deg, rgba(255, 77, 45, 0.08), transparent 34%),
+    radial-gradient(circle at 50% 46%, #25282e 0%, #111317 42%, #090a0c 100%);
+  color: white;
+  isolation: isolate;
+}
+
+.gym-loader::before,
+.gym-loader::after {
+  position: absolute;
+  content: '';
+  pointer-events: none;
+}
+
+.gym-loader::before {
+  inset: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gym-loader::after {
+  top: 1rem;
+  left: 12%;
+  width: 12%;
+  height: 1px;
+  background: #ff4d2d;
+  box-shadow: 0 0 20px rgba(255, 77, 45, 0.8);
+}
+
+.gym-loader__grain {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.24;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.gym-loader__glow {
+  position: absolute;
+  z-index: -1;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 999px;
+  filter: blur(90px);
+  opacity: 0.16;
+}
+
+.gym-loader__glow--one {
+  top: -12rem;
+  right: -8rem;
+  background: #ff4d2d;
+}
+
+.gym-loader__glow--two {
+  bottom: -15rem;
+  left: -8rem;
+  background: #29d39a;
+}
+
+.gym-loader__content {
+  width: min(37rem, 100%);
+  text-align: center;
+}
+
+.gym-loader__eyebrow {
+  margin: 0 0 2rem;
+  color: #ff6a4f;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.gym-loader__barbell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(31rem, 86vw);
+  height: 6.5rem;
+  margin: 0 auto 2rem;
+  animation: gym-lift 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  filter: drop-shadow(0 16px 20px rgba(0, 0, 0, 0.5));
+}
+
+.gym-loader__bar {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  height: 0.38rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f5f6f7, #777d85 55%, #d9dcdf);
+}
+
+.gym-loader__grip {
+  position: absolute;
+  left: 33%;
+  right: 33%;
+  z-index: 1;
+  height: 0.62rem;
+  border-radius: 2px;
+  background: repeating-linear-gradient(115deg, #4b5057 0 2px, #aeb3b8 2px 4px);
+}
+
+.gym-loader__plate,
+.gym-loader__collar {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.24rem;
+  background: linear-gradient(90deg, #17191d, #3b3e43 48%, #16181b);
+  box-shadow: inset 2px 0 rgba(255, 255, 255, 0.08), 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.gym-loader__plate {
+  width: 1.4rem;
+}
+
+.gym-loader__plate--left-outer,
+.gym-loader__plate--right-outer {
+  height: 4.4rem;
+  border-color: rgba(255, 77, 45, 0.45);
+}
+
+.gym-loader__plate--left-inner,
+.gym-loader__plate--right-inner {
+  width: 1.15rem;
+  height: 5.5rem;
+  background: linear-gradient(90deg, #a72b1d, #ff4d2d 48%, #8e2115);
+}
+
+.gym-loader__plate--left-outer { left: 8%; }
+.gym-loader__plate--left-inner { left: calc(8% + 1.45rem); }
+.gym-loader__plate--right-inner { right: calc(8% + 1.45rem); }
+.gym-loader__plate--right-outer { right: 8%; }
+
+.gym-loader__collar {
+  width: 0.65rem;
+  height: 2.4rem;
+  background: linear-gradient(90deg, #92979d, #e5e7e9, #686d73);
+}
+
+.gym-loader__collar--left { left: calc(8% - 0.7rem); }
+.gym-loader__collar--right { right: calc(8% - 0.7rem); }
+
+.gym-loader__brand {
+  margin: 0;
+  font-size: clamp(2.1rem, 7vw, 4.8rem);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.gym-loader__message {
+  margin: 0.55rem 0 1.6rem;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.gym-loader__tagline {
+  margin: 0.9rem 0 0;
+  color: #ff6a4f;
+  font-size: clamp(0.85rem, 2vw, 1rem);
+  font-weight: 900;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+
+.gym-loader__track {
+  width: min(24rem, 80%);
+  height: 2px;
+  margin: auto;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.gym-loader__progress {
+  display: block;
+  width: 42%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #ff4d2d 30%, #ff826b);
+  box-shadow: 0 0 16px #ff4d2d;
+  animation: gym-progress 1.5s ease-in-out infinite;
+}
+
+.gym-loader__metrics {
+  display: flex;
+  justify-content: space-between;
+  width: min(24rem, 80%);
+  margin: 0.8rem auto 0;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.gym-loader__pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.gym-loader__pulse i {
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background: #29d39a;
+  box-shadow: 0 0 8px #29d39a;
+  animation: gym-pulse 1s ease-in-out infinite;
+}
+
+.gym-loader__count {
+  position: absolute;
+  right: clamp(2rem, 5vw, 5rem);
+  bottom: clamp(2rem, 5vw, 4rem);
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.gym-loader__count span:first-child {
+  color: #ff4d2d;
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+@keyframes gym-lift {
+  0%, 100% { transform: translateY(0) rotate(-0.5deg); }
+  45% { transform: translateY(-0.85rem) rotate(0.5deg); }
+  58% { transform: translateY(-0.85rem) rotate(0deg); }
+}
+
+@keyframes gym-progress {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(340%); }
+}
+
+@keyframes gym-pulse {
+  50% { opacity: 0.35; transform: scale(0.72); }
+}
+
+@media (max-width: 480px) {
+  .gym-loader::before { inset: 0.65rem; }
+  .gym-loader::after { top: 0.65rem; }
+  .gym-loader__barbell { height: 5.5rem; }
+  .gym-loader__plate--left-inner,
+  .gym-loader__plate--right-inner { height: 4.8rem; }
+  .gym-loader__count { display: none; }
+  .gym-loader__metrics { width: 90%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gym-loader__barbell,
+  .gym-loader__progress,
+  .gym-loader__pulse i {
+    animation: none;
+  }
+
+  .gym-loader__progress {
+    width: 72%;
+  }
+}

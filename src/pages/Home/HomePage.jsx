@@ -116,16 +116,26 @@ export default function HomePage() {
               </a>
             ))}
           </div>
-          <div className="flex shrink-0 items-center gap-2"><Link to="/admin/login" className="hidden sm:block">
-            <Button variant="subtle" className="bg-white/15 text-white ring-white/20 hover:bg-white/25">
-              Admin
-            </Button>
-          </Link>
-          <Link to="/member/login">
-            <Button variant="accent">
-              Member
-            </Button>
-          </Link></div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              to="/admin/login"
+              aria-label="Open admin panel"
+              title="Admin panel"
+              className="group relative grid h-10 w-10 place-items-center overflow-hidden rounded-lg border border-white/15 bg-white/10 text-white shadow-lg shadow-black/10 backdrop-blur transition hover:-translate-y-0.5 hover:border-ember/60 hover:bg-ember sm:h-auto sm:w-auto sm:border-0 sm:bg-transparent sm:shadow-none"
+            >
+              <span className="absolute inset-0 translate-y-full bg-gradient-to-t from-ember to-orange-400 transition-transform duration-300 group-hover:translate-y-0 sm:hidden" />
+              <ShieldCheck className="relative h-[18px] w-[18px] sm:hidden" />
+              <span className="hidden items-center justify-center rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/20 transition hover:bg-white/25 sm:inline-flex">
+                Admin
+              </span>
+              <span className="pointer-events-none absolute -bottom-1 right-0 h-2 w-2 rounded-full border-2 border-[#1b1b1b] bg-mint sm:hidden" />
+            </Link>
+            <Link to="/member/login">
+              <Button variant="accent">
+                Member
+              </Button>
+            </Link>
+          </div>
         </nav>
       </header>
 
@@ -410,7 +420,7 @@ function PlanCard({ plan }) {
         <div className="flex items-end gap-2">
           <span className="text-4xl font-black tracking-tight sm:text-5xl">₹{Number(plan.price).toLocaleString('en-IN')}</span>
         </div>
-        <p className={`mt-2 text-xs font-semibold ${popular ? 'text-white/45' : 'text-steel'}`}>for {plan.duration} days of membership</p>
+        <p className={`mt-2 text-xs font-semibold ${popular ? 'text-white/45' : 'text-steel'}`}>+ 5% GST · {plan.duration} days of membership</p>
       </div>
 
       <ul className={`relative mt-6 flex-1 space-y-3.5 text-sm ${popular ? 'text-white/75' : 'text-slate-700 dark:text-slate-200'}`}>

@@ -1,10 +1,11 @@
-import { Suspense, lazy } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Suspense, lazy, useEffect } from 'react';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AdminLayout } from './layouts/AdminLayout.jsx';
 import { PublicLayout } from './layouts/PublicLayout.jsx';
 import { ProtectedRoute } from './routes/ProtectedRoute.jsx';
 import { PageLoader } from './components/ui/PageLoader.jsx';
 import { ErrorBoundary } from './components/common/ErrorBoundary.jsx';
+import { useSiteContent } from './context/SiteContentContext.jsx';
 
 const HomePage = lazy(() => import('./pages/Home/HomePage.jsx'));
 const LoginPage = lazy(() => import('./pages/Admin/LoginPage.jsx'));
@@ -25,6 +26,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <DocumentTitle />
         <Suspense fallback={<PageLoader />}>
           <Routes>
               <Route element={<PublicLayout />}>
@@ -72,4 +74,21 @@ export default function App() {
       </BrowserRouter>
     </ErrorBoundary>
   );
+}
+
+function DocumentTitle() {
+  const { pathname } = useLocation();
+  const { gymName } = useSiteContent();
+
+  useEffect(() => {
+    if (pathname.startsWith('/admin')) {
+      document.title = `${gymName} · Admin Portal`;
+    } else if (pathname.startsWith('/member')) {
+      document.title = `${gymName} · Member Portal`;
+    } else {
+      document.title = `${gymName} · Commit to be fit`;
+    }
+  }, [gymName, pathname]);
+
+  return null;
 }

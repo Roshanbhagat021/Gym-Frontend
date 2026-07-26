@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Ban, CalendarDays, CreditCard, Edit3, LockKeyhole, Mail, MapPin, Phone, Plus, RefreshCw, RotateCcw, Search, Trash2, UserRound, X } from 'lucide-react';
+import { Ban, CalendarDays, CreditCard, Edit3, LockKeyhole, Mail, MapPin, MessageCircle, Phone, Plus, RefreshCw, RotateCcw, Search, Trash2, UserRound, X } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { DataTable } from '../../components/common/DataTable';
 import { FormModal } from '../../components/common/FormModal';
@@ -14,8 +14,11 @@ import { MEMBERSHIP_STATUSES } from '../../constants/enums';
 import { adminApi } from '../../services/api';
 import { useAsync } from '../../hooks/useAsync';
 import { currency, getMemberEmail, getMemberName, shortDate } from '../../utils/format';
+import { amountWithGst, calculateGst, MEMBERSHIP_GST_RATE } from '../../utils/tax';
+import { useSiteContent } from '../../context/SiteContentContext';
 
 export default function MembersPage() {
+  const { gymName } = useSiteContent();
   const [filters, setFilters] = useState({ search: '', status: '', gender: '', expiry: '', sortBy: 'createdAt', sortOrder: 'DESC', page: 1, limit: 10 });
   const [searchText, setSearchText] = useState('');
   const [editing, setEditing] = useState(null);
@@ -146,6 +149,7 @@ export default function MembersPage() {
       />
       <MemberDetailsDrawer
         member={selectedMember}
+        gymName={gymName}
         onClose={() => setSelectedMember(null)}
         onEdit={(memberToEdit) => {
           setSelectedMember(null);
@@ -175,18 +179,21 @@ export default function MembersPage() {
   );
 }
 
-function MemberDetailsDrawer({ member, onClose, onEdit, onRenew }) {
+function MemberDetailsDrawer({ member, gymName, onClose, onEdit, onRenew }) {
   if (!member) return null;
 
   const memberships = [...(member.memberships || [])].sort(
     (a, b) => new Date(b.startDate) - new Date(a.startDate),
   );
   const currentMembership = getCurrentMembership(memberships);
+  const whatsapp = getMemberWhatsapp(member, gymName);
+  const isNoMembership = member.membershipStatus === 'NO_MEMBERSHIP';
+  const isExpired = member.membershipStatus === 'EXPIRED';
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40" role="dialog" aria-modal="true" onClick={onClose}>
       <aside
-        className="fixed inset-x-0 bottom-0 max-h-[92vh] overflow-y-auto rounded-t-lg bg-white p-5 shadow-panel dark:bg-[#181a20] md:inset-x-auto md:bottom-0 md:right-0 md:top-0 md:h-screen md:max-h-none md:w-[420px] md:rounded-none md:p-6"
+        className="fixed inset-x-0 bottom-0 max-h-[92vh] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-panel dark:bg-[#181a20] md:inset-x-auto md:bottom-0 md:right-0 md:top-0 md:h-screen md:max-h-none md:w-[440px] md:rounded-none md:p-6"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
@@ -195,10 +202,10 @@ function MemberDetailsDrawer({ member, onClose, onEdit, onRenew }) {
               <img
                 src={member.profileImage}
                 alt={getMemberName(member)}
-                className="h-20 w-20 shrink-0 rounded-lg object-cover shadow-panel"
+                className="h-20 w-20 shrink-0 rounded-xl object-cover shadow-panel ring-4 ring-slate-100 dark:ring-white/10"
               />
             ) : (
-              <div className="grid h-20 w-20 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-300">
+              <div className="grid h-20 w-20 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-500 ring-4 ring-slate-50 dark:bg-white/10 dark:text-slate-300 dark:ring-white/5">
                 <UserRound className="h-9 w-9" />
               </div>
             )}
@@ -220,17 +227,18 @@ function MemberDetailsDrawer({ member, onClose, onEdit, onRenew }) {
           </span>
         </div>
 
-        <div className="mt-5 grid gap-3">
+        <p className="mt-6 text-xs font-black uppercase tracking-[0.18em] text-steel">Contact & personal details</p>
+        <div className="mt-2 divide-y divide-slate-200 border-y border-slate-200 dark:divide-white/10 dark:border-white/10">
           <DetailItem icon={Phone} label="Mobile" value={member.mobile} />
           <DetailItem icon={Mail} label="Email" value={getMemberEmail(member)} />
           <DetailItem icon={UserRound} label="Gender" value={member.gender} />
           <DetailItem icon={CalendarDays} label="DOB" value={shortDate(member.dob)} />
           <DetailItem icon={Phone} label="Emergency contact" value={member.emergencyContact} />
-          <DetailItem icon={MapPin} label="Address" value={member.address} />
+          <DetailItem icon={MapPin} label="Address" value={member.address} className="sm:col-span-2" />
         </div>
 
-        <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-steel">Current plan</p>
+        <div className={`mt-6 border-l-2 py-1 pl-4 ${isNoMembership ? 'border-amber-400' : isExpired ? 'border-red-400' : 'border-emerald-400'}`}>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-steel">Membership snapshot</p>
           <h3 className="mt-2 text-lg font-black">{currentMembership?.planName || currentMembership?.plan?.name || 'No active plan'}</h3>
           <p className="mt-1 text-sm text-steel">
             {currentMembership
@@ -242,12 +250,14 @@ function MemberDetailsDrawer({ member, onClose, onEdit, onRenew }) {
           ) : null}
         </div>
 
+        <WhatsappComposer whatsapp={whatsapp} status={member.membershipStatus} />
+
         <div className="mt-6">
-          <h3 className="text-base font-black">Membership history</h3>
-          <div className="mt-3 space-y-3">
+          <h3 className="text-xs font-black uppercase tracking-[0.18em] text-steel">Membership history</h3>
+          <div className="mt-2 divide-y divide-slate-200 border-y border-slate-200 dark:divide-white/10 dark:border-white/10">
             {memberships.length ? (
               memberships.map((membership) => (
-                <div key={membership.id} className="rounded-lg border border-slate-200 p-3 dark:border-white/10">
+                <div key={membership.id} className="py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-bold">{membership.planName || membership.plan?.name}</p>
@@ -261,17 +271,17 @@ function MemberDetailsDrawer({ member, onClose, onEdit, onRenew }) {
                 </div>
               ))
             ) : (
-              <p className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-steel dark:border-white/10">
+              <p className="py-4 text-sm text-steel">
                 No membership history yet.
               </p>
             )}
           </div>
         </div>
 
-        <div className="sticky bottom-0 mt-6 flex gap-3 bg-white pt-4 dark:bg-[#181a20]">
+        <div className="sticky bottom-0 mt-6 grid grid-cols-2 gap-3 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur dark:border-white/10 dark:bg-[#181a20]/95">
           <Button variant="accent" className="flex-1" onClick={() => onRenew(member)}>
             <CreditCard className="h-4 w-4" />
-            Renew
+            {isNoMembership ? 'Add plan' : 'Renew'}
           </Button>
           <Button variant="subtle" className="flex-1" onClick={() => onEdit(member)}>
             <Edit3 className="h-4 w-4" />
@@ -283,16 +293,90 @@ function MemberDetailsDrawer({ member, onClose, onEdit, onRenew }) {
   );
 }
 
-function DetailItem({ icon: Icon, label, value }) {
+function WhatsappComposer({ whatsapp, status }) {
+  const [editing, setEditing] = useState(false);
+  const [message, setMessage] = useState(whatsapp.message);
+
+  useEffect(() => {
+    setMessage(whatsapp.message);
+    setEditing(false);
+  }, [whatsapp.message]);
+
+  const actionLabel = status === 'NO_MEMBERSHIP'
+    ? 'Share membership invitation'
+    : status === 'EXPIRED'
+      ? 'Send renewal reminder'
+      : 'Message on WhatsApp';
+  const href = `https://wa.me/${whatsapp.phone}?text=${encodeURIComponent(message.trim())}`;
+
   return (
-    <div className="flex gap-3 rounded-lg border border-slate-200 p-3 dark:border-white/10">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-ember" />
-      <div className="min-w-0">
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-steel">{label}</p>
-        <p className="mt-1 break-words text-sm font-semibold">{value || '-'}</p>
+    <section className="mt-6 border-y border-slate-200 py-4 dark:border-white/10">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="h-4 w-4 text-[#25D366]" />
+          <h3 className="text-xs font-black uppercase tracking-[0.16em] text-steel">WhatsApp message</h3>
+        </div>
+        <button type="button" onClick={() => setEditing((current) => !current)} className="inline-flex items-center gap-1.5 text-xs font-bold text-ember transition hover:text-[#e94325]">
+          <Edit3 className="h-3.5 w-3.5" /> {editing ? 'Done' : 'Edit message'}
+        </button>
       </div>
+
+      {editing ? (
+        <textarea
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
+          rows={6}
+          className="mt-3 w-full resize-y rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-6 outline-none transition focus:border-[#25D366] focus:ring-4 focus:ring-[#25D366]/10 dark:border-white/10 dark:bg-white/[0.04]"
+          aria-label="WhatsApp message"
+        />
+      ) : (
+        <p className="mt-3 text-sm leading-6 text-steel">{message}</p>
+      )}
+
+      <a href={href} target="_blank" rel="noreferrer" className={`mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#25D366] px-4 py-2 text-sm font-black text-[#07170d] transition hover:-translate-y-0.5 hover:bg-[#54e685] focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 ${message.trim() ? '' : 'pointer-events-none opacity-50'}`}>
+        <MessageCircle className="h-4 w-4" /> {actionLabel}
+      </a>
+    </section>
+  );
+}
+
+function DetailItem({ icon: Icon, label, value, className = '' }) {
+  return (
+    <div className={`grid min-w-0 grid-cols-[1fr_1.4fr] items-center gap-4 py-3 ${className}`}>
+      <div className="flex items-center gap-2 text-steel">
+        <Icon className="h-4 w-4 shrink-0 text-ember" />
+        <p className="text-xs font-bold uppercase tracking-[0.12em]">{label}</p>
+      </div>
+      <p className="min-w-0 break-words text-sm font-semibold">{value || '-'}</p>
     </div>
   );
+}
+
+function getMemberWhatsapp(member, gymName) {
+  const name = getMemberName(member).split(' ')[0];
+  const status = member.membershipStatus;
+  let message;
+
+  if (status === 'NO_MEMBERSHIP') {
+    message = `Hi ${name}! 👋 This is the team at ${gymName}. We would love to help you begin your fitness journey. We have membership plans designed for different goals and schedules. Would you like us to share the best options for you?`;
+  } else if (status === 'EXPIRED') {
+    message = `Hi ${name}! 👋 Your membership at ${gymName} has expired. We would love to welcome you back and help you keep your fitness momentum going. Reply to this message and we will help you renew your membership.`;
+  } else if (status === 'UPCOMING') {
+    message = `Hi ${name}! 👋 Your membership at ${gymName} is scheduled to begin soon. Let us know if you need any help before your first session—we are excited to have you with us!`;
+  } else if (status === 'CANCELLED') {
+    message = `Hi ${name}, this is the team at ${gymName}. We noticed your membership was cancelled. If you would like to restart your fitness journey, reply here and we will be happy to help.`;
+  } else {
+    message = `Hi ${name}! 👋 This is the team at ${gymName}. We are checking in to see how your training is going. Let us know if there is anything we can help you with.`;
+  }
+
+  let digits = String(member.mobile || '').replace(/\D/g, '');
+  if (digits.length === 10) digits = `91${digits}`;
+  else if (digits.length === 11 && digits.startsWith('0')) digits = `91${digits.slice(1)}`;
+
+  return {
+    message,
+    phone: digits,
+  };
 }
 
 function getCurrentMembership(memberships = []) {
@@ -321,6 +405,8 @@ function RenewPlanModal({ open, member, plans, onClose, onSaved }) {
   const planAmount = Number(selectedPlan?.price || 0);
   const discountAmount = calculateDiscount(coupon, planAmount);
   const payableAmount = Math.max(planAmount - discountAmount, 0);
+  const gstAmount = calculateGst(payableAmount);
+  const totalPayable = amountWithGst(payableAmount);
 
   useEffect(() => {
     setCouponCode('');
@@ -426,10 +512,11 @@ function RenewPlanModal({ open, member, plans, onClose, onSaved }) {
               </p>
             ) : null}
 
-            <div className="mt-4 grid gap-3 rounded-lg bg-white p-4 text-sm dark:bg-white/5 md:grid-cols-3">
+            <div className="mt-4 grid gap-3 rounded-lg bg-white p-4 text-sm dark:bg-white/5 sm:grid-cols-2 md:grid-cols-4">
               <Summary label="Amount" value={currency(planAmount)} />
               <Summary label="Discount" value={`- ${currency(discountAmount)}`} />
-              <Summary label="Payable" value={currency(payableAmount)} strong />
+              <Summary label={`GST (${MEMBERSHIP_GST_RATE}%)`} value={currency(gstAmount)} />
+              <Summary label="Total payable" value={currency(totalPayable)} strong />
             </div>
           </div>
         ) : null}
@@ -471,6 +558,8 @@ function MemberForm({ open, member, plans, onClose, onRenew, onSaved }) {
   const planAmount = Number(selectedPlan?.price || 0);
   const discountAmount = calculateDiscount(coupon, planAmount);
   const payableAmount = Math.max(planAmount - discountAmount, 0);
+  const gstAmount = calculateGst(payableAmount);
+  const totalPayable = amountWithGst(payableAmount);
   const currentMembership = useMemo(
     () => getRelevantMembership(member?.memberships || []),
     [member],
@@ -676,10 +765,11 @@ function MemberForm({ open, member, plans, onClose, onRenew, onSaved }) {
               </p>
             ) : null}
 
-            <div className="mt-4 grid gap-3 rounded-lg bg-white p-4 text-sm dark:bg-white/5 md:grid-cols-3">
+            <div className="mt-4 grid gap-3 rounded-lg bg-white p-4 text-sm dark:bg-white/5 sm:grid-cols-2 md:grid-cols-4">
               <Summary label="Amount" value={currency(planAmount)} />
               <Summary label="Discount" value={`- ${currency(discountAmount)}`} />
-              <Summary label="Payable" value={currency(payableAmount)} strong />
+              <Summary label={`GST (${MEMBERSHIP_GST_RATE}%)`} value={currency(gstAmount)} />
+              <Summary label="Total payable" value={currency(totalPayable)} strong />
             </div>
           </div>
         ) : null}
@@ -706,7 +796,7 @@ function MembershipAccessPanel({ member, membership, action, canReactivate, onAc
   const status = member.membershipStatus;
   const planName = membership?.planName || membership?.plan?.name || 'No plan assigned';
   const canCancel = status === 'ACTIVE' || status === 'UPCOMING';
-  const needsRenewal = status === 'EXPIRED' || (status === 'CANCELLED' && !canReactivate);
+  const needsRenewal = status === 'NO_MEMBERSHIP' || status === 'EXPIRED' || (status === 'CANCELLED' && !canReactivate);
 
   return (
     <section className="md:col-span-2 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.04]">
@@ -751,7 +841,7 @@ function MembershipAccessPanel({ member, membership, action, canReactivate, onAc
           ) : null}
           {needsRenewal ? (
             <Button type="button" variant="accent" onClick={onRenew}>
-              <RefreshCw className="h-4 w-4" /> Renew membership
+              <RefreshCw className="h-4 w-4" /> {status === 'NO_MEMBERSHIP' ? 'Add membership' : 'Renew membership'}
             </Button>
           ) : null}
           {action ? <p className="text-xs font-semibold text-steel">Save the form to review and confirm this access change.</p> : null}

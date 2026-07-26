@@ -12,6 +12,7 @@ import { PAYMENT_STATUSES } from '../../constants/enums';
 import { adminApi } from '../../services/api';
 import { useAsync } from '../../hooks/useAsync';
 import { currency, getMemberName, shortDate } from '../../utils/format';
+import { amountWithGst, calculateGst, MEMBERSHIP_GST_RATE } from '../../utils/tax';
 
 export default function PaymentsPage() {
   const [filters, setFilters] = useState({ search: '', status: '', method: '', period: '' });
@@ -62,6 +63,9 @@ function PaymentForm({ open, payment, members, plans, onClose, onSaved }) {
   const selectedPlan = plans.find((plan) => plan.id === planId);
   const planAmount = Number(selectedPlan?.price || 0);
   const discountAmount = calculateDiscount(coupon, planAmount);
+  const taxableAmount = Math.max(planAmount - discountAmount, 0);
+  const gstAmount = calculateGst(taxableAmount);
+  const totalAmount = amountWithGst(taxableAmount);
 
   useEffect(() => {
     if (selectedPlan && !payment) setValue('amount', planAmount, { shouldValidate: true });
@@ -99,7 +103,7 @@ function PaymentForm({ open, payment, members, plans, onClose, onSaved }) {
     <form onSubmit={handleSubmit(submit)} className="grid gap-4 md:grid-cols-2">
       <Field label="Member"><Select disabled={Boolean(payment)} className={payment ? 'cursor-not-allowed bg-slate-100 opacity-75 dark:bg-white/5' : ''} {...register('memberId', { required: true })}><option value="">Select member</option>{members.map((member) => <option key={member.id} value={member.id}>{getMemberName(member)}</option>)}</Select>{payment && <p className="mt-1 text-xs text-steel">The member cannot be changed after a payment is recorded.</p>}</Field>
       <Field label="Plan to activate"><Select {...register('planId')}><option value="">No plan</option>{plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name} — {currency(plan.price)}</option>)}</Select></Field>
-      <Field label="Amount"><Input type="number" min="0" step="0.01" readOnly={Boolean(selectedPlan && !payment)} className={selectedPlan && !payment ? 'bg-slate-100 dark:bg-white/5' : ''} {...register('amount', { required: true })} /></Field>
+      <Field label={selectedPlan && !payment ? 'Taxable amount' : 'Amount'}><Input type="number" min="0" step="0.01" readOnly={Boolean(selectedPlan && !payment)} className={selectedPlan && !payment ? 'bg-slate-100 dark:bg-white/5' : ''} {...register('amount', { required: true })} /></Field>
       <Field label="Method"><Select {...register('paymentGateway')}><option value="CASH">Cash</option><option value="RAZORPAY">Online</option></Select></Field>
       {!payment && selectedPlan && <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
         <p className="mb-2 text-sm font-bold">Have a coupon?</p>
@@ -107,6 +111,7 @@ function PaymentForm({ open, payment, members, plans, onClose, onSaved }) {
         {couponError && <p className="mt-2 text-xs font-semibold text-red-500">{couponError}</p>}
         {coupon && <div className="mt-3 grid grid-cols-3 gap-3 rounded-md bg-white p-3 text-sm dark:bg-white/5"><div><p className="text-xs text-steel">Plan price</p><p className="font-bold">{currency(planAmount)}</p></div><div><p className="text-xs text-steel">Discount</p><p className="font-bold text-mint">− {currency(discountAmount)}</p></div><div><p className="text-xs text-steel">Payable</p><p className="font-black text-ember">{currency(Math.max(planAmount - discountAmount, 0))}</p></div></div>}
       </div>}
+      {!payment && selectedPlan && <div className="md:col-span-2 grid grid-cols-3 gap-3 rounded-lg border border-ember/15 bg-ember/[0.04] p-4 text-sm"><div><p className="text-xs text-steel">After discount</p><p className="font-bold">{currency(taxableAmount)}</p></div><div><p className="text-xs text-steel">GST ({MEMBERSHIP_GST_RATE}%)</p><p className="font-bold">{currency(gstAmount)}</p></div><div><p className="text-xs text-steel">Total payable</p><p className="font-black text-ember">{currency(totalAmount)}</p></div></div>}
       <Field label="Status"><Select {...register('status')}>{PAYMENT_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}</Select></Field>
       <Field label="Transaction ID"><Input {...register('transactionId')} /></Field>
       <div className="md:col-span-2"><FormActions isSubmitting={formState.isSubmitting} onCancel={onClose} submitLabel="Save payment" /></div>
