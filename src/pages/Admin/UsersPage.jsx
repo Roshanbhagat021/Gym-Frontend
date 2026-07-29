@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Edit3, Plus, Trash2 } from 'lucide-react';
+import { Edit3, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { DataTable } from '../../components/common/DataTable';
 import { FormModal } from '../../components/common/FormModal';
@@ -38,6 +38,7 @@ export default function UsersPage() {
 }
 
 function UserForm({ open, user, onClose, onSaved }) {
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, formState, watch, setValue } = useForm({ values: {
     name: user?.name || '',
     email: user?.email || '',
@@ -73,7 +74,31 @@ function UserForm({ open, user, onClose, onSaved }) {
       <form onSubmit={handleSubmit(submit)} className="grid gap-4 md:grid-cols-2">
         <Field label="Name"><Input {...register('name', { required: true })} /></Field>
         <Field label="Email"><Input type="email" {...register('email', { required: true })} /></Field>
-        <Field label={user ? 'New password' : 'Password'}><Input type="password" {...register('password', user ? {} : { required: true, minLength: 6 })} /></Field>
+        <Field label={user ? 'New password (optional)' : 'Password'} error={formState.errors.password?.message}>
+          <div className="relative">
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              className="pr-11"
+              placeholder={user ? 'Leave blank to keep current password' : 'Minimum 6 characters'}
+              {...register('password', {
+                required: user ? false : 'Password is required',
+                minLength: {
+                  value: 6,
+                  message: 'Password must be at least 6 characters',
+                },
+              })}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-steel transition hover:text-ember focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ember"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </Field>
         <Field label="Role"><Select {...register('role')}>{ROLES.filter((role) => role !== 'MEMBER').map((role) => <option key={role} value={role}>{role}</option>)}</Select></Field>
         <Field label="Active"><Select {...register('isActive')}><option value="true">Yes</option><option value="false">No</option></Select></Field>
         <div className="md:col-span-2">

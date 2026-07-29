@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -8,12 +9,14 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  Moon,
   Phone,
   Quote,
   Send,
   ShieldCheck,
   Sparkles,
   Star,
+  Sun,
   Trophy,
   Zap,
   Dumbbell,
@@ -26,12 +29,25 @@ import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useSiteContent } from '../../context/SiteContentContext';
 import { BrandMark } from '../../components/common/BrandMark';
+import { useAuth } from '../../context/AuthContext';
 
 const fallbackImages = [
-  'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1534258936925-c58bed479fcb?auto=format&fit=crop&w=1200&q=80',
-  'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=80',
+  {
+    src: '/images/gym/hero-1600.webp',
+    srcSet: '/images/gym/hero-960.webp 960w, /images/gym/hero-1600.webp 1600w',
+  },
+  {
+    src: '/images/gym/training-floor-1200.webp',
+    srcSet: '/images/gym/training-floor-640.webp 640w, /images/gym/training-floor-1200.webp 1200w',
+  },
+  {
+    src: '/images/gym/strength-training-1200.webp',
+    srcSet: '/images/gym/strength-training-640.webp 640w, /images/gym/strength-training-1200.webp 1200w',
+  },
+  {
+    src: '/images/gym/fitness-equipment-1200.webp',
+    srcSet: '/images/gym/fitness-equipment-640.webp 640w, /images/gym/fitness-equipment-1200.webp 1200w',
+  },
 ];
 
 const LOCATION = {
@@ -94,12 +110,75 @@ const faqs = [
 
 export default function HomePage() {
   const { content, loading: contentLoading, gymName, logo } = useSiteContent();
+  const { theme, setTheme } = useAuth();
   const { data: plans = [], loading: plansLoading } = useAsync(() => publicApi.plans(true), []);
   const { data: trainers = [], loading: trainersLoading } = useAsync(() => publicApi.trainers(true), []);
 
   const heroImage = content?.heroBanners?.[0] || fallbackImages[0];
   const gallery = content?.galleryImages?.length ? content.galleryImages : fallbackImages;
   const contact = content?.contactInformation || {};
+
+  useEffect(() => {
+    const description = `${gymName} is a premium fitness club in Ahmedabad offering expert coaching, flexible memberships, and a fully equipped training floor.`;
+    const pageUrl = window.location.origin;
+    const heroUrl = typeof heroImage === 'string' ? heroImage : `${pageUrl}${heroImage.src}`;
+    const metadata = {
+      description,
+      'og:title': `${gymName} · Premium Fitness Club in Ahmedabad`,
+      'og:description': description,
+      'og:image': heroUrl,
+      'og:url': pageUrl,
+      'twitter:title': `${gymName} · Premium Fitness Club in Ahmedabad`,
+      'twitter:description': description,
+      'twitter:image': heroUrl,
+    };
+
+    Object.entries(metadata).forEach(([name, value]) => {
+      const attribute = name.startsWith('og:') ? 'property' : 'name';
+      let meta = document.head.querySelector(`meta[${attribute}="${name}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute(attribute, name);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', value);
+    });
+
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.rel = 'canonical';
+      document.head.appendChild(canonical);
+    }
+    canonical.href = pageUrl;
+
+    let structuredData = document.getElementById('local-business-schema');
+    if (!structuredData) {
+      structuredData = document.createElement('script');
+      structuredData.id = 'local-business-schema';
+      structuredData.type = 'application/ld+json';
+      document.head.appendChild(structuredData);
+    }
+    structuredData.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'HealthClub',
+      name: gymName,
+      description,
+      image: heroUrl,
+      url: pageUrl,
+      telephone: contact.phone || LOCATION.phone,
+      email: contact.email || undefined,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: contact.address || LOCATION.address,
+        addressLocality: 'Ahmedabad',
+        addressRegion: 'Gujarat',
+        postalCode: '380059',
+        addressCountry: 'IN',
+      },
+      openingHours: contact.hours || LOCATION.hours,
+    });
+  }, [contact.address, contact.email, contact.hours, contact.phone, gymName, heroImage]);
 
   return (
     <main className="overflow-hidden bg-white text-ink dark:bg-[#0f1115] dark:text-white">
@@ -117,6 +196,16 @@ export default function HomePage() {
             ))}
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              aria-pressed={theme === 'dark'}
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="grid h-10 w-10 place-items-center rounded-lg border border-white/15 bg-white/10 text-white shadow-lg shadow-black/10 backdrop-blur transition hover:-translate-y-0.5 hover:border-ember/60 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-ember focus:ring-offset-2 focus:ring-offset-black/60"
+            >
+              {theme === 'dark' ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+            </button>
             <Link
               to="/admin/login"
               aria-label="Open admin panel"
@@ -140,7 +229,15 @@ export default function HomePage() {
       </header>
 
       <section id="hero" className="relative min-h-[92vh] overflow-hidden">
-        <img src={heroImage} alt={`${gymName} training space`} className="absolute inset-0 h-full w-full object-cover" />
+        <img
+          src={typeof heroImage === 'string' ? heroImage : heroImage.src}
+          srcSet={typeof heroImage === 'string' ? undefined : heroImage.srcSet}
+          sizes="100vw"
+          alt={`${gymName} training space`}
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/45 to-ember/35" />
         <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-end px-4 pb-16 pt-28 md:pb-20">
           <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl text-white">
@@ -231,9 +328,13 @@ export default function HomePage() {
         <div className="mx-auto mt-10 grid max-w-7xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {gallery.slice(0, 8).map((image, index) => (
             <img
-              key={image}
-              src={image}
+              key={typeof image === 'string' ? image : image.src}
+              src={typeof image === 'string' ? image : image.src}
+              srcSet={typeof image === 'string' ? undefined : image.srcSet}
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
               alt={`${gymName} gallery ${index + 1}`}
+              loading="lazy"
+              decoding="async"
               className={`h-56 w-full rounded-lg object-cover shadow-panel sm:h-64 ${index === 0 || index === 3 ? 'sm:col-span-2' : ''}`}
             />
           ))}
@@ -463,8 +564,10 @@ function TrainerCard({ trainer, gymName, ownerPhone }) {
       <div className="p-4 pb-0 sm:p-6 sm:pb-0 lg:p-7 lg:pr-0">
         <div className="relative h-[390px] overflow-hidden rounded-lg bg-slate-100 sm:h-[460px] lg:h-full lg:min-h-[430px] dark:bg-white/5">
           <img
-            src={trainer.image || fallbackImages[2]}
+            src={trainer.image || fallbackImages[2].src}
             alt={`${trainer.name}, ${trainer.specialization || 'fitness coach'}`}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-[1.03]"
           />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 to-transparent" />

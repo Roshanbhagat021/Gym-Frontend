@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { publicApi } from '../services/api';
 
 const SiteContentContext = createContext(null);
-const DEFAULT_GYM_NAME = 'Gym';
+const DEFAULT_GYM_NAME = 'Rons fitness club';
 
 export function SiteContentProvider({ children }) {
   const [content, setContent] = useState(null);

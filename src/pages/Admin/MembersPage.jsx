@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Ban, CalendarDays, CreditCard, Edit3, LockKeyhole, Mail, MapPin, MessageCircle, Phone, Plus, RefreshCw, RotateCcw, Search, Trash2, UserRound, X } from 'lucide-react';
+import { Ban, CalendarDays, CreditCard, Edit3, Eye, EyeOff, LockKeyhole, Mail, MapPin, MessageCircle, Phone, Plus, RefreshCw, RotateCcw, Search, Trash2, UserRound, X } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { DataTable } from '../../components/common/DataTable';
 import { FormModal } from '../../components/common/FormModal';
@@ -528,6 +528,7 @@ function RenewPlanModal({ open, member, plans, onClose, onSaved }) {
 }
 
 function MemberForm({ open, member, plans, onClose, onRenew, onSaved }) {
+  const [showPassword, setShowPassword] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [coupon, setCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
@@ -667,10 +668,28 @@ function MemberForm({ open, member, plans, onClose, onRenew, onSaved }) {
       <form onSubmit={handleSubmit(submit)} className="grid gap-4 md:grid-cols-2">
         <Field label="Name" error={formState.errors.name?.message}><Input {...register('name', { required: 'Name is required' })} /></Field>
         <Field label="Email" error={formState.errors.email?.message}><Input type="email" {...register('email', { required: 'Email is required' })} /></Field>
-        <Field label={member ? 'New password (optional)' : 'Password'} error={formState.errors.password?.message}><Input type="password" placeholder={member ? 'Leave blank to keep current password' : 'Minimum 6 characters'} {...register('password', {
-          required: member ? false : 'Password is required',
-          validate: (value) => !value || value.length >= 6 || 'Minimum 6 characters',
-        })} /></Field>
+        <Field label={member ? 'New password (optional)' : 'Password'} error={formState.errors.password?.message}>
+          <div className="relative">
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              className="pr-11"
+              placeholder={member ? 'Leave blank to keep current password' : 'Minimum 6 characters'}
+              {...register('password', {
+                required: member ? false : 'Password is required',
+                validate: (value) => !value || value.length >= 6 || 'Minimum 6 characters',
+              })}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-steel transition hover:text-ember focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ember"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </Field>
         <Field label="Mobile" error={formState.errors.mobile?.message}>
           <Input
             inputMode="numeric"
