@@ -11,6 +11,7 @@ import { useAsync } from '../../hooks/useAsync';
 import { memberApi } from '../../services/api';
 import { currency, shortDate } from '../../utils/format';
 import { BrandMark } from '../../components/common/BrandMark';
+import { ReceiptActions } from '../../components/billing/ReceiptActions';
 
 export default function MemberDashboardPage() {
   const { logout } = useAuth();
@@ -156,6 +157,7 @@ export default function MemberDashboardPage() {
                     <th className="py-3">Gateway</th>
                     <th className="py-3">Status</th>
                     <th className="py-3 text-right">Amount</th>
+                    <th className="py-3 text-right">Receipt</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/10">
@@ -166,6 +168,7 @@ export default function MemberDashboardPage() {
                       <td className="py-4">{payment.paymentGateway}</td>
                       <td className="py-4"><StatusBadge value={payment.status} /></td>
                       <td className="py-4 text-right font-black">{currency(payment.amount)}</td>
+                      <td className="py-4"><ReceiptActions payment={payment} gymName={gymName} /></td>
                     </tr>
                   ))}
                 </tbody>

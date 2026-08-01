@@ -12,9 +12,12 @@ import { PAYMENT_STATUSES } from '../../constants/enums';
 import { adminApi } from '../../services/api';
 import { useAsync } from '../../hooks/useAsync';
 import { currency, getMemberName, shortDate } from '../../utils/format';
-import { amountWithGst, calculateGst, MEMBERSHIP_GST_RATE } from '../../utils/tax';
+import { amountWithGst, calculateGst, GST_RATE_OPTIONS, MEMBERSHIP_GST_RATE } from '../../utils/tax';
+import { ReceiptActions } from '../../components/billing/ReceiptActions';
+import { useSiteContent } from '../../context/SiteContentContext';
 
 export default function PaymentsPage() {
+  const { gymName } = useSiteContent();
   const [filters, setFilters] = useState({ search: '', status: '', method: '', period: '' });
   const [editing, setEditing] = useState(null);
   const [open, setOpen] = useState(false);
@@ -39,7 +42,7 @@ export default function PaymentsPage() {
         { key: 'status', header: 'Status', render: (row) => <StatusBadge value={row.status} /> },
         { key: 'paymentGateway', header: 'Method', render: (row) => row.paymentGateway === 'CASH' ? 'Cash' : 'Online' },
         { key: 'createdAt', header: 'Date', render: (row) => shortDate(row.createdAt) },
-        { key: 'actions', header: 'Actions', render: (row) => <Button variant="subtle" className="!min-h-8 h-8 w-8 px-0" onClick={() => { setEditing(row); setOpen(true); }}><Edit3 className="h-3.5 w-3.5" /></Button> },
+        { key: 'actions', header: 'Actions', render: (row) => <div className="flex flex-wrap justify-end gap-2"><ReceiptActions payment={row} gymName={gymName} allowWhatsapp /><Button variant="subtle" className="!min-h-8 h-8 w-8 px-0" onClick={() => { setEditing(row); setOpen(true); }}><Edit3 className="h-3.5 w-3.5" /></Button></div> },
       ]} />
       <PaymentForm open={open} payment={editing} members={members} plans={plans} onClose={() => setOpen(false)} onSaved={() => { setOpen(false); execute(); }} />
     </div>
@@ -58,14 +61,16 @@ function PaymentForm({ open, payment, members, plans, onClose, onSaved }) {
     transactionId: payment?.transactionId || '',
     paymentGateway: payment ? (payment.paymentGateway === 'CASH' ? 'CASH' : 'RAZORPAY') : 'CASH',
     planId: '',
+    gstRate: payment?.gstRate ?? MEMBERSHIP_GST_RATE,
   } });
   const planId = watch('planId');
   const selectedPlan = plans.find((plan) => plan.id === planId);
+  const gstRate = Number(watch('gstRate') || 0);
   const planAmount = Number(selectedPlan?.price || 0);
   const discountAmount = calculateDiscount(coupon, planAmount);
   const taxableAmount = Math.max(planAmount - discountAmount, 0);
-  const gstAmount = calculateGst(taxableAmount);
-  const totalAmount = amountWithGst(taxableAmount);
+  const gstAmount = calculateGst(taxableAmount, gstRate);
+  const totalAmount = amountWithGst(taxableAmount, gstRate);
 
   useEffect(() => {
     if (selectedPlan && !payment) setValue('amount', planAmount, { shouldValidate: true });
@@ -105,13 +110,14 @@ function PaymentForm({ open, payment, members, plans, onClose, onSaved }) {
       <Field label="Plan to activate"><Select {...register('planId')}><option value="">No plan</option>{plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name} — {currency(plan.price)}</option>)}</Select></Field>
       <Field label={selectedPlan && !payment ? 'Taxable amount' : 'Amount'}><Input type="number" min="0" step="0.01" readOnly={Boolean(selectedPlan && !payment)} className={selectedPlan && !payment ? 'bg-slate-100 dark:bg-white/5' : ''} {...register('amount', { required: true })} /></Field>
       <Field label="Method"><Select {...register('paymentGateway')}><option value="CASH">Cash</option><option value="RAZORPAY">Online</option></Select></Field>
+      {!payment && selectedPlan && <Field label="GST rate"><Select {...register('gstRate', { valueAsNumber: true })}>{GST_RATE_OPTIONS.map((rate) => <option key={rate} value={rate}>{rate}%</option>)}</Select></Field>}
       {!payment && selectedPlan && <div className="md:col-span-2 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
         <p className="mb-2 text-sm font-bold">Have a coupon?</p>
         <div className="flex gap-2"><Input value={couponCode} onChange={(event) => setCouponCode(event.target.value.toUpperCase())} placeholder="Enter coupon code" disabled={Boolean(coupon)} /><Button type="button" variant="subtle" onClick={coupon ? () => { setCoupon(null); setCouponCode(''); setValue('amount', planAmount); } : applyCoupon} disabled={couponLoading}>{couponLoading ? 'Checking…' : coupon ? 'Remove' : 'Apply'}</Button></div>
         {couponError && <p className="mt-2 text-xs font-semibold text-red-500">{couponError}</p>}
         {coupon && <div className="mt-3 grid grid-cols-3 gap-3 rounded-md bg-white p-3 text-sm dark:bg-white/5"><div><p className="text-xs text-steel">Plan price</p><p className="font-bold">{currency(planAmount)}</p></div><div><p className="text-xs text-steel">Discount</p><p className="font-bold text-mint">− {currency(discountAmount)}</p></div><div><p className="text-xs text-steel">Payable</p><p className="font-black text-ember">{currency(Math.max(planAmount - discountAmount, 0))}</p></div></div>}
       </div>}
-      {!payment && selectedPlan && <div className="md:col-span-2 grid grid-cols-3 gap-3 rounded-lg border border-ember/15 bg-ember/[0.04] p-4 text-sm"><div><p className="text-xs text-steel">After discount</p><p className="font-bold">{currency(taxableAmount)}</p></div><div><p className="text-xs text-steel">GST ({MEMBERSHIP_GST_RATE}%)</p><p className="font-bold">{currency(gstAmount)}</p></div><div><p className="text-xs text-steel">Total payable</p><p className="font-black text-ember">{currency(totalAmount)}</p></div></div>}
+      {!payment && selectedPlan && <div className="md:col-span-2 grid grid-cols-3 gap-3 rounded-lg border border-ember/15 bg-ember/[0.04] p-4 text-sm"><div><p className="text-xs text-steel">After discount</p><p className="font-bold">{currency(taxableAmount)}</p></div><div><p className="text-xs text-steel">GST ({gstRate}%)</p><p className="font-bold">{currency(gstAmount)}</p></div><div><p className="text-xs text-steel">Total payable</p><p className="font-black text-ember">{currency(totalAmount)}</p></div></div>}
       <Field label="Status"><Select {...register('status')}>{PAYMENT_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}</Select></Field>
       <Field label="Transaction ID"><Input {...register('transactionId')} /></Field>
       <div className="md:col-span-2"><FormActions isSubmitting={formState.isSubmitting} onCancel={onClose} submitLabel="Save payment" /></div>

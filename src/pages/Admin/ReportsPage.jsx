@@ -84,7 +84,7 @@ export default function ReportsPage() {
         <div className="flex items-center justify-between border-b border-slate-200 p-5 dark:border-white/10">
           <div>
             <h2 className="text-xl font-black">GST ledger</h2>
-            <p className="mt-1 text-xs text-steel">5% GST is stored against each new membership payment.</p>
+            <p className="mt-1 text-xs text-steel">The selected GST rate is stored against each membership payment.</p>
           </div>
           <ReceiptIndianRupee className="h-6 w-6 text-ember" />
         </div>

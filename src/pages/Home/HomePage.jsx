@@ -521,7 +521,7 @@ function PlanCard({ plan }) {
         <div className="flex items-end gap-2">
           <span className="text-4xl font-black tracking-tight sm:text-5xl">₹{Number(plan.price).toLocaleString('en-IN')}</span>
         </div>
-        <p className={`mt-2 text-xs font-semibold ${popular ? 'text-white/45' : 'text-steel'}`}>+ 5% GST · {plan.duration} days of membership</p>
+        <p className={`mt-2 text-xs font-semibold ${popular ? 'text-white/45' : 'text-steel'}`}>GST as applicable · {plan.duration} days of membership</p>
       </div>
 
       <ul className={`relative mt-6 flex-1 space-y-3.5 text-sm ${popular ? 'text-white/75' : 'text-slate-700 dark:text-slate-200'}`}>

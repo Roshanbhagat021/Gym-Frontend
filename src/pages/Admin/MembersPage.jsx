@@ -14,7 +14,7 @@ import { MEMBERSHIP_STATUSES } from '../../constants/enums';
 import { adminApi } from '../../services/api';
 import { useAsync } from '../../hooks/useAsync';
 import { currency, getMemberEmail, getMemberName, shortDate } from '../../utils/format';
-import { amountWithGst, calculateGst, MEMBERSHIP_GST_RATE } from '../../utils/tax';
+import { amountWithGst, calculateGst, GST_RATE_OPTIONS, MEMBERSHIP_GST_RATE } from '../../utils/tax';
 import { useSiteContent } from '../../context/SiteContentContext';
 
 export default function MembersPage() {
@@ -388,6 +388,7 @@ function getCurrentMembership(memberships = []) {
 }
 
 function RenewPlanModal({ open, member, plans, onClose, onSaved }) {
+  const [gstRate, setGstRate] = useState(MEMBERSHIP_GST_RATE);
   const [couponCode, setCouponCode] = useState('');
   const [coupon, setCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
@@ -405,8 +406,8 @@ function RenewPlanModal({ open, member, plans, onClose, onSaved }) {
   const planAmount = Number(selectedPlan?.price || 0);
   const discountAmount = calculateDiscount(coupon, planAmount);
   const payableAmount = Math.max(planAmount - discountAmount, 0);
-  const gstAmount = calculateGst(payableAmount);
-  const totalPayable = amountWithGst(payableAmount);
+  const gstAmount = calculateGst(payableAmount, gstRate);
+  const totalPayable = amountWithGst(payableAmount, gstRate);
 
   useEffect(() => {
     setCouponCode('');
@@ -445,6 +446,7 @@ function RenewPlanModal({ open, member, plans, onClose, onSaved }) {
       memberId: member.id,
       planId: values.planId,
       amount: payableAmount,
+      gstRate,
       status: 'COMPLETED',
       paymentGateway: 'CASH',
       transactionId: coupon
@@ -505,6 +507,12 @@ function RenewPlanModal({ open, member, plans, onClose, onSaved }) {
               </Button>
             </div>
 
+            <Field label="GST rate">
+              <Select value={gstRate} onChange={(event) => setGstRate(Number(event.target.value))}>
+                {GST_RATE_OPTIONS.map((rate) => <option key={rate} value={rate}>{rate}%</option>)}
+              </Select>
+            </Field>
+
             {couponError ? <p className="mt-2 text-sm font-semibold text-red-600">{couponError}</p> : null}
             {coupon ? (
               <p className="mt-2 text-sm font-semibold text-emerald-600">
@@ -515,7 +523,7 @@ function RenewPlanModal({ open, member, plans, onClose, onSaved }) {
             <div className="mt-4 grid gap-3 rounded-lg bg-white p-4 text-sm dark:bg-white/5 sm:grid-cols-2 md:grid-cols-4">
               <Summary label="Amount" value={currency(planAmount)} />
               <Summary label="Discount" value={`- ${currency(discountAmount)}`} />
-              <Summary label={`GST (${MEMBERSHIP_GST_RATE}%)`} value={currency(gstAmount)} />
+              <Summary label={`GST (${gstRate}%)`} value={currency(gstAmount)} />
               <Summary label="Total payable" value={currency(totalPayable)} strong />
             </div>
           </div>
@@ -528,6 +536,7 @@ function RenewPlanModal({ open, member, plans, onClose, onSaved }) {
 }
 
 function MemberForm({ open, member, plans, onClose, onRenew, onSaved }) {
+  const [gstRate, setGstRate] = useState(MEMBERSHIP_GST_RATE);
   const [showPassword, setShowPassword] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [coupon, setCoupon] = useState(null);
@@ -559,8 +568,8 @@ function MemberForm({ open, member, plans, onClose, onRenew, onSaved }) {
   const planAmount = Number(selectedPlan?.price || 0);
   const discountAmount = calculateDiscount(coupon, planAmount);
   const payableAmount = Math.max(planAmount - discountAmount, 0);
-  const gstAmount = calculateGst(payableAmount);
-  const totalPayable = amountWithGst(payableAmount);
+  const gstAmount = calculateGst(payableAmount, gstRate);
+  const totalPayable = amountWithGst(payableAmount, gstRate);
   const currentMembership = useMemo(
     () => getRelevantMembership(member?.memberships || []),
     [member],
@@ -624,6 +633,7 @@ function MemberForm({ open, member, plans, onClose, onRenew, onSaved }) {
         memberId: savedMember?.id || member.id,
         planId: selectedPlanId,
         amount: payableAmount,
+        gstRate,
         status: 'COMPLETED',
         paymentGateway: 'CASH',
         transactionId: coupon
@@ -758,6 +768,12 @@ function MemberForm({ open, member, plans, onClose, onRenew, onSaved }) {
               </div>
             </div>
 
+            <Field label="GST rate">
+              <Select value={gstRate} onChange={(event) => setGstRate(Number(event.target.value))}>
+                {GST_RATE_OPTIONS.map((rate) => <option key={rate} value={rate}>{rate}%</option>)}
+              </Select>
+            </Field>
+
             <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
               <Field label="Coupon code">
                 <Input
@@ -787,7 +803,7 @@ function MemberForm({ open, member, plans, onClose, onRenew, onSaved }) {
             <div className="mt-4 grid gap-3 rounded-lg bg-white p-4 text-sm dark:bg-white/5 sm:grid-cols-2 md:grid-cols-4">
               <Summary label="Amount" value={currency(planAmount)} />
               <Summary label="Discount" value={`- ${currency(discountAmount)}`} />
-              <Summary label={`GST (${MEMBERSHIP_GST_RATE}%)`} value={currency(gstAmount)} />
+              <Summary label={`GST (${gstRate}%)`} value={currency(gstAmount)} />
               <Summary label="Total payable" value={currency(totalPayable)} strong />
             </div>
           </div>
